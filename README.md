@@ -1,6 +1,21 @@
-# ThrowawayDb [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb)
-Dead simple integration tests for Sql server using throwaway databases.
+# ThrowawayDb 
 
+Easily create a disposable database that integration tests dead simple for Sql server using throwaway databases. 
+
+### Available Packages 
+
+| Package  | Supports | Version |
+| -------- | -------- | ------- |
+| ThrowawayDb | SQL Server | [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb) |
+| ThrowawayDb.Postgres | SQL Server | [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.Postgres.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb.Postgres) |
+
+## Using SQL Server
+
+Install `ThrowawayDb` from Nuget
+```
+dotent add package ThrowawayDb
+```
+Use from your code
 ```csharp
 public static void Main(string[] args)
 {
@@ -38,3 +53,26 @@ ThrowawayDatabase.Create(username: "Zaid", password: "strongPassword", host: "19
 ThrowawayDatabase.Create(connectionString: "Data Source=localhost\\SQLEXPRESS;Initial Catalog=master;Integrated Security=True;")
 ```
 
+## Using PostgreSQL server
+Install `ThrowawayDb.Postgres` from Nuget
+```
+dotnet add package ThrowawayDb.Postgres
+```
+use from your code:
+```cs
+static void Main(string[] args)
+{
+    using (var database = ThrowawayDatabase.Create(username: "postgres", password: "postgres", host: "localhost"))
+    {
+        using (var connection = new NpgsqlConnection(database.ConnectionString))
+        {
+            connection.Open();
+            using (var cmd = new NpgsqlCommand("SELECT 1", connection))
+            {
+                var result = Convert.ToInt32(cmd.ExecuteScalar());
+                Console.WriteLine(result);
+            }
+        }
+    }
+}
+```

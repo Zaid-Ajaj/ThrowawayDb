@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
+    <PackageReference Include="Npgsql" Version="4.0.6" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\ThrowawayDb\ThrowawayDb.csproj" />
+    <ProjectReference Include="..\..\src\ThrowawayDb.Postgres\ThrowawayDb.Postgres.csproj" />
   </ItemGroup>
 
 </Project>

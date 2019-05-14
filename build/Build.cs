@@ -17,7 +17,9 @@ class Build : NukeBuild
 {
     static AbsolutePath Source => RootDirectory / "src";
     static AbsolutePath ThrowawayDb => Source / "ThrowawayDb"; 
-    static AbsolutePath Tests => RootDirectory / "tests";
+    static AbsolutePath ThrowawayDbPostgres => Source / "ThrowawayDb.Postgres";
+    static AbsolutePath ThrowawayDbTests => RootDirectory / "tests" / "ThrowawayDb";
+    static AbsolutePath ThrowawayDbPostgresTests => RootDirectory / "tests" / "ThrowawayDb.Postgres";
     static AbsolutePath PublishDir => RootDirectory / "publish";
     static readonly string DOTNET = "dotnet";
     public static int Main () => Execute<Build>(x => x.Test);
@@ -32,12 +34,17 @@ class Build : NukeBuild
             var directories = new List<string> {
                 ThrowawayDb / "bin",
                 ThrowawayDb / "obj", 
-                Tests / "bin",
-                Tests / "obj",
+                ThrowawayDbPostgres / "bin", 
+                ThrowawayDbPostgres / "obj",
+                ThrowawayDbTests / "bin",
+                ThrowawayDbTests / "obj",
+                ThrowawayDbPostgresTests / "bin",
+                ThrowawayDbPostgresTests / "obj",
                 PublishDir
             };
 
-            foreach(var dir in directories) {
+            foreach(var dir in directories) 
+            {
                 DeleteDirectory(dir);
             }
         });
@@ -48,8 +55,12 @@ class Build : NukeBuild
         .Executes(() => {
             StartProcess(DOTNET, "restore --no-cache", ThrowawayDb).AssertZeroExitCode();
             StartProcess(DOTNET, "build", ThrowawayDb).AssertZeroExitCode();
-            StartProcess(DOTNET, "restore --no-cache", Tests).AssertZeroExitCode();
-            StartProcess(DOTNET, "build", Tests).AssertZeroExitCode();
+            StartProcess(DOTNET, "restore --no-cache", ThrowawayDbPostgres).AssertZeroExitCode();
+            StartProcess(DOTNET, "build", ThrowawayDbPostgres).AssertZeroExitCode();
+            StartProcess(DOTNET, "restore --no-cache", ThrowawayDbTests).AssertZeroExitCode();
+            StartProcess(DOTNET, "build", ThrowawayDbTests).AssertZeroExitCode();
+            StartProcess(DOTNET, "restore --no-cache", ThrowawayDbPostgresTests).AssertZeroExitCode();
+            StartProcess(DOTNET, "build", ThrowawayDbPostgresTests).AssertZeroExitCode();
         });
 
     Target Test => task => 
@@ -57,12 +68,16 @@ class Build : NukeBuild
         .DependsOn(Compile)
         .Executes(() =>
         {
-            StartProcess(DOTNET, "restore", Tests).AssertZeroExitCode();
-            StartProcess(DOTNET, "build", Tests).AssertZeroExitCode();
-            StartProcess(DOTNET, "run", Tests).AssertZeroExitCode();
+            StartProcess(DOTNET, "restore", ThrowawayDbTests).AssertZeroExitCode();
+            StartProcess(DOTNET, "build", ThrowawayDbTests).AssertZeroExitCode();
+            StartProcess(DOTNET, "run", ThrowawayDbTests).AssertZeroExitCode();
+
+            StartProcess(DOTNET, "restore", ThrowawayDbPostgresTests).AssertZeroExitCode();
+            StartProcess(DOTNET, "build", ThrowawayDbPostgresTests).AssertZeroExitCode();
+            StartProcess(DOTNET, "run", ThrowawayDbPostgresTests).AssertZeroExitCode();
         });
 
-    Target Pack => task =>
+    Target PackThrowawayDb => task =>
       task 
         .DependsOn(Compile)
         .Executes(() => 
@@ -71,9 +86,9 @@ class Build : NukeBuild
             StartProcess(DOTNET, packCmd, ThrowawayDb).AssertZeroExitCode();
         });
 
-    Target Publish => task =>
+    Target PublishThrowawayDb => task =>
       task
-        .DependsOn(Pack) 
+        .DependsOn(PackThrowawayDb) 
         .Executes(() => 
         {
             var nugetFile = Directory.GetFiles(PublishDir).FirstOrDefault() ?? "";
@@ -95,4 +110,38 @@ class Build : NukeBuild
             var nugetFileName = new FileInfo(nugetFile).Name;
             StartProcess(DOTNET, $"nuget push {nugetFileName} -s https://api.nuget.org/v3/index.json -k {nugetApiKey}", PublishDir).AssertZeroExitCode();
         });
+
+    Target PackThrowawayDbPostgres => task =>
+      task 
+        .DependsOn(Compile)
+        .Executes(() => 
+        {
+            var packCmd = $"pack -c Release -o {PublishDir}";
+            StartProcess(DOTNET, packCmd, ThrowawayDbPostgres).AssertZeroExitCode();
+        });
+
+    Target PublishThrowawayDbPostgres => task =>
+      task
+        .DependsOn(PackThrowawayDbPostgres) 
+        .Executes(() => 
+        {
+            var nugetFile = Directory.GetFiles(PublishDir).FirstOrDefault() ?? "";
+            if (!nugetFile.EndsWith(".nupkg"))
+            {
+                Logger.Error("No nuget package found");
+                System.Diagnostics.Process.GetCurrentProcess().Kill();
+            }
+
+            Logger.Info($"About to publish nuget package: {nugetFile}");
+            var nugetApiKey = EnsureVariable("NUGET_KEY") ?? "";
+
+            if (string.IsNullOrWhiteSpace(nugetApiKey))
+            {
+                Logger.Error("Nuget API Key was not setup on your local machine, missing environment variable NUGET_KEY");
+                System.Diagnostics.Process.GetCurrentProcess().Kill();
+            }
+
+            var nugetFileName = new FileInfo(nugetFile).Name;
+            StartProcess(DOTNET, $"nuget push {nugetFileName} -s https://api.nuget.org/v3/index.json -k {nugetApiKey}", PublishDir).AssertZeroExitCode();
+        });        
 }

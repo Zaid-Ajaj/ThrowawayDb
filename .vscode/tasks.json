@@ -2,12 +2,22 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "buildThrowawayDb",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/tests/Tests.csproj"
+                "${workspaceFolder}/tests/ThrowawayDb/Tests.csproj"
+            ],
+            "problemMatcher": "$tsc"
+        },
+        {
+            "label": "buildThrowawayDbPostgres",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/tests/ThrowawayDb.Postgres/Tests.csproj"
             ],
             "problemMatcher": "$tsc"
         },

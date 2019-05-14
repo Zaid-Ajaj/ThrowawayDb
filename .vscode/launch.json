@@ -5,21 +5,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (console)",
+            "name": "Lauch ThrowawayDb",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/tests/bin/Debug/netcoreapp2.0/Tests.dll",
+            "preLaunchTask": "buildThrowawayDb",
+            "program": "${workspaceFolder}/tests/ThrowawayDb/bin/Debug/netcoreapp2.0/Tests.dll",
             "args": [],
             "cwd": "${workspaceFolder}/tests",
             "console": "internalConsole",
             "stopAtEntry": false
         },
         {
-            "name": ".NET Core Attach",
+            "name": "Lauch ThrowawayDb.Postgres",
             "type": "coreclr",
-            "request": "attach",
-            "processId": "${command:pickProcess}"
+            "request": "launch",
+            "preLaunchTask": "buildThrowawayDbPostgres",
+            "program": "${workspaceFolder}/tests/ThrowawayDb.Postgres/bin/Debug/netcoreapp2.0/Tests.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/tests",
+            "console": "internalConsole",
+            "stopAtEntry": false
         }
     ]
 }
