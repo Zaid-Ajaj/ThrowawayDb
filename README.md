@@ -1,4 +1,4 @@
-# ThrowawayDb
+# ThrowawayDb [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb)
 Dead simple integration tests for Sql server using throwaway databases.
 
 ```csharp
