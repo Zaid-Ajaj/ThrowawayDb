@@ -1,6 +1,6 @@
 # ThrowawayDb 
 
-Easily create a disposable database that integration tests dead simple for Sql server using throwaway databases. 
+Easily create disposable databases that will make your integration tests a breeze. 
 
 ### Available Packages 
 
