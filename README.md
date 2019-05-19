@@ -13,7 +13,7 @@ Easily create disposable databases that will make your integration tests a breez
 
 Install `ThrowawayDb` from Nuget
 ```
-dotent add package ThrowawayDb
+dotnet add package ThrowawayDb
 ```
 Use from your code
 ```csharp
