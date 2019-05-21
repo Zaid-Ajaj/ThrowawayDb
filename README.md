@@ -46,7 +46,7 @@ You can create the throwaway database in multiple ways:
 // from Sql Express server locally with Integrated security
 ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS")
 
-// Uses the default local instance where Data Source = .
+// Uses the default instance locally where Data Source = .
 ThrowawayDatabase.FromDefaultLocalInstance()
 
 // Using SQL Authentication with user credentials and an arbibrary host
