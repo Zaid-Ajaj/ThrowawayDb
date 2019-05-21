@@ -11,11 +11,11 @@ namespace ThrowawayDb
         public string ConnectionString { get; internal set; } = "";
         /// <summary>Returns the name of the database that was created</summary>
         public string Name { get; internal set; } = "";
-        private bool databaseCreated = false; 
+        private bool databaseCreated = false;
         private string originalConnectionString = "";
         private ThrowawayDatabase(string originalConnectionString)
-        { 
-            // Default constructor is private   
+        {
+            // Default constructor is private
             this.originalConnectionString = originalConnectionString;
             var (derivedConnectionString, databaseName) = DeriveThrowawayConnectionString(originalConnectionString);
             ConnectionString = derivedConnectionString;
@@ -29,14 +29,14 @@ namespace ThrowawayDb
                 using (var connection = new SqlConnection(this.originalConnectionString))
                 {
                     connection.Open();
-                    
+
                     var resetActiveSessions = $"ALTER DATABASE {Name} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;";
-                    
+
                     using (var cmd = new SqlCommand(resetActiveSessions, connection))
                     {
                         cmd.ExecuteNonQuery();
                     }
-                    
+
                     using (var cmd = new SqlCommand($"DROP DATABASE {Name}", connection))
                     {
                         var result = cmd.ExecuteNonQuery();
@@ -47,7 +47,7 @@ namespace ThrowawayDb
 
         private bool CreateDatabaseIfDoesNotExist()
         {
-            try 
+            try
             {
                 var databaseName = "";
                 var builder = new SqlConnectionStringBuilder(this.ConnectionString);
@@ -74,7 +74,7 @@ namespace ThrowawayDb
                                         creationResult = true;
                                         break;
                                     }
-                                }  
+                                }
 
                                 if (!databaseExists)
                                 {
@@ -90,7 +90,7 @@ namespace ThrowawayDb
                                         }
                                     }
                                 }
-                                else 
+                                else
                                 {
                                     this.databaseCreated = true;
                                     creationResult = true;
@@ -101,20 +101,20 @@ namespace ThrowawayDb
 
                     return creationResult;
                 }
-                else 
+                else
                 {
                     return false;
                 }
             }
-            catch 
+            catch
             {
                 return false;
             }
         }
-        
+
         private static bool TryPingDatabase(string originalConnectionString)
         {
-            try 
+            try
             {
                 using (var connection = new SqlConnection(originalConnectionString))
                 {
@@ -139,14 +139,14 @@ namespace ThrowawayDb
         private (string connectionString, string databaseName) DeriveThrowawayConnectionString(string originalConnectionString)
         {
             var builder = new SqlConnectionStringBuilder(originalConnectionString);
-            
+
             var databaseName = $"ThrowawayDb{Guid.NewGuid().ToString("n").Substring(0, 10)}";
 
             if (builder.TryGetValue("Initial Catalog", out var initialDb))
             {
                 builder.Remove("Initial Catalog");
             }
-                
+
             builder.InitialCatalog = databaseName;
             return (builder.ConnectionString, databaseName);
         }
@@ -157,14 +157,14 @@ namespace ThrowawayDb
         public static ThrowawayDatabase FromLocalInstance(string instance)
         {
             var connectionString = $"Data Source={instance};Initial Catalog=master;Integrated Security=True;";
-            
+
             if (!TryPingDatabase(connectionString))
             {
                 throw new Exception("Could not connect to the database");
             }
 
             var database = new ThrowawayDatabase(connectionString);
-            
+
             if (!database.CreateDatabaseIfDoesNotExist())
             {
                 throw new Exception("Could not create the throwaway database");
@@ -179,7 +179,12 @@ namespace ThrowawayDb
         public static ThrowawayDatabase FromLocalExpressInstance() => FromLocalInstance("localhost\\SQLEXPRESS");
 
         /// <summary>
-        /// Creates a database through SQL server authentication using the given username, password and the datasource/instance. 
+        /// Uses the default instance (Data Source = .) with integrated security to create a throwaway database locally.
+        /// </summary>
+        public static ThrowawayDatabase FromDefaultLocalInstance() => FromLocalInstance(".");
+
+        /// <summary>
+        /// Creates a database through SQL server authentication using the given username, password and the datasource/instance.
         /// </summary>
         public static ThrowawayDatabase Create(string username, string password, string datasource)
         {
@@ -197,8 +202,8 @@ namespace ThrowawayDb
 
             return database;
         }
-        
-        
+
+
         /// <summary>
         /// Creates a throwaway database using the connection string provided. No need to set the Initial Catalog as it will get replaced by the name of the database that will be created.
         /// </summary>
@@ -218,7 +223,7 @@ namespace ThrowawayDb
 
             return database;
         }
-        
+
         public void Dispose() => DropDatabaseIfCreated();
     }
 }

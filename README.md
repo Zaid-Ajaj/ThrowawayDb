@@ -1,8 +1,8 @@
-# ThrowawayDb 
+# ThrowawayDb
 
-Easily create a disposable database that integration tests dead simple for Sql server using throwaway databases. 
+Easily create a disposable database that integration tests dead simple for Sql server using throwaway databases.
 
-### Available Packages 
+### Available Packages
 
 | Package  | Supports | Version |
 | -------- | -------- | ------- |
@@ -22,7 +22,7 @@ public static void Main(string[] args)
     using (var database = ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS"))
     {
         Console.WriteLine($"Created database {database.Name}");
-        
+
         // - Apply database migrations here if necessary
         // - Seed the database with data
         // - Execute your code against this database
@@ -44,7 +44,10 @@ In the snippet above, a dummy database with a random name is created using the c
 You can create the throwaway database in multiple ways:
 ```cs
 // from Sql Express server locally with Integrated security
-ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS") 
+ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS")
+
+// Uses the default local instance where Data Source = .
+ThrowawayDatabase.FromDefaultLocalInstance()
 
 // Using SQL Authentication with user credentials and an arbibrary host
 ThrowawayDatabase.Create(username: "Zaid", password: "strongPassword", host: "192.168.1.100")
