@@ -11,7 +11,7 @@ namespace tests
             var arguments = String.Join(", ", args);
             Console.WriteLine($"Arguments [{arguments}]");
 
-            using (var database = ThrowawayDatabase.FromDefaultLocalInstance())
+            using (var database = ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS"))
             {
                 Console.WriteLine($"Created database {database.Name}");
                 // Apply migrations / seed data if necessary

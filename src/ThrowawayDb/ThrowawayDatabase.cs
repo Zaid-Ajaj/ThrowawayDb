@@ -174,16 +174,6 @@ namespace ThrowawayDb
         }
 
         /// <summary>
-        /// Uses the `localhost\\SQLEXPRESS` instance with integrated security to create a throwaway database locally.
-        /// </summary>
-        public static ThrowawayDatabase FromLocalExpressInstance() => FromLocalInstance("localhost\\SQLEXPRESS");
-
-        /// <summary>
-        /// Uses the default instance (Data Source = .) with integrated security to create a throwaway database locally.
-        /// </summary>
-        public static ThrowawayDatabase FromDefaultLocalInstance() => FromLocalInstance(".");
-
-        /// <summary>
         /// Creates a database through SQL server authentication using the given username, password and the datasource/instance.
         /// </summary>
         public static ThrowawayDatabase Create(string username, string password, string datasource)
