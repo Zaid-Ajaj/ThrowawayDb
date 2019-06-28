@@ -7,7 +7,7 @@ Easily create a disposable database that integration tests dead simple for Sql s
 | Package  | Supports | Version |
 | -------- | -------- | ------- |
 | ThrowawayDb | SQL Server | [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb) |
-| ThrowawayDb.Postgres | SQL Server | [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.Postgres.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb.Postgres) |
+| ThrowawayDb.Postgres | Postgres | [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.Postgres.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb.Postgres) |
 
 ## Using SQL Server
 
