@@ -10,12 +10,12 @@ namespace ThrowawayDb.Postgres
         public string ConnectionString { get; internal set; } = "";
         /// <summary>Returns the name of the database that was created</summary>
         public string Name { get; internal set; } = "";
-        private bool databaseCreated = false; 
+        private bool databaseCreated = false;
         private string originalConnectionString = "";
 
         private ThrowawayDatabase(string originalConnectionString)
         {
-            // Default constructor is private   
+            // Default constructor is private
             this.originalConnectionString = originalConnectionString;
             var (derivedConnectionString, databaseName) = DeriveThrowawayConnectionString(originalConnectionString);
             ConnectionString = derivedConnectionString;
@@ -26,17 +26,27 @@ namespace ThrowawayDb.Postgres
         {
             if (databaseCreated)
             {
+                // Revoke future connections
                 using (var connection = new NpgsqlConnection(this.originalConnectionString))
                 {
                     connection.Open();
-                    
-                    var resetActiveSessions = $"select pg_terminate_backend(pid) from pg_stat_activity where datname='{Name}'";     
-                   
-                    using (var cmd = new NpgsqlCommand(resetActiveSessions, connection))
+
+                }
+
+                using (var connection = new NpgsqlConnection(this.originalConnectionString))
+                {
+                    connection.Open();
+
+                    using (var cmd = new NpgsqlCommand($"REVOKE CONNECT ON DATABASE {Name} FROM public", connection))
                     {
                         cmd.ExecuteNonQuery();
                     }
-                    
+
+                    using (var cmd = new NpgsqlCommand($"select pg_terminate_backend(pid) from pg_stat_activity where datname='{Name}'", connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
                     using (var cmd = new NpgsqlCommand($"DROP DATABASE {Name}", connection))
                     {
                         var result = cmd.ExecuteNonQuery();
@@ -48,14 +58,14 @@ namespace ThrowawayDb.Postgres
         private (string connectionString, string databaseName) DeriveThrowawayConnectionString(string originalConnectionString)
         {
             var builder = new NpgsqlConnectionStringBuilder(originalConnectionString);
-            
+
             var databaseName = $"throwawaydb{Guid.NewGuid().ToString("n").Substring(0, 10).ToLowerInvariant()}";
 
             if (builder.TryGetValue("Database", out var initialDb))
             {
                 builder.Remove("Database");
             }
-                
+
             builder.Database = databaseName;
             return (builder.ConnectionString, databaseName);
         }
@@ -69,7 +79,7 @@ namespace ThrowawayDb.Postgres
             }
 
             var database = new ThrowawayDatabase(connectionString);
-            
+
             if (!database.CreateDatabaseIfDoesNotExist())
             {
                 throw new Exception("Could not create the throwaway database");
@@ -86,17 +96,17 @@ namespace ThrowawayDb.Postgres
             }
 
             var database = new ThrowawayDatabase(connectionString);
-            
+
             if (!database.CreateDatabaseIfDoesNotExist())
             {
                 throw new Exception("Could not create the throwaway database");
             }
 
             return database;
-        }      
+        }
         private bool CreateDatabaseIfDoesNotExist()
         {
-            try 
+            try
             {
                 var databaseName = "";
                 var builder = new NpgsqlConnectionStringBuilder(this.ConnectionString);
@@ -116,23 +126,23 @@ namespace ThrowawayDb.Postgres
                             creationResult = true;
                         }
                     }
- 
+
                     return creationResult;
                 }
-                else 
+                else
                 {
                     return false;
                 }
             }
-            catch 
+            catch
             {
                 return false;
             }
         }
-        
+
         private static bool TryPingDatabase(string originalConnectionString)
         {
-            try 
+            try
             {
                 using (var connection = new NpgsqlConnection(originalConnectionString))
                 {
@@ -152,7 +162,7 @@ namespace ThrowawayDb.Postgres
                 Console.ForegroundColor = ConsoleColor.White;
                 return false;
             }
-        }     
+        }
 
         public void Dispose() => DropDatabaseIfCreated();
     }
