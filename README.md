@@ -13,7 +13,7 @@ Easily create a disposable database that integration tests dead simple for Sql s
 
 Install `ThrowawayDb` from Nuget
 ```
-dotent add package ThrowawayDb
+dotnet add package ThrowawayDb
 ```
 Use from your code
 ```csharp
