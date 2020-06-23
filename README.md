@@ -4,10 +4,10 @@ Easily create a disposable database that integration tests dead simple for Sql s
 
 ### Available Packages
 
-| Package  | Supports | Version |
-| -------- | -------- | ------- |
-| ThrowawayDb | SQL Server | [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb) |
-| ThrowawayDb.Postgres | Postgres | [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.Postgres.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb.Postgres) |
+| Package              | Supports   | Version                                                                                                                               |
+| -------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| ThrowawayDb          | SQL Server | [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb)                   |
+| ThrowawayDb.Postgres | Postgres   | [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.Postgres.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb.Postgres) |
 
 ## Using SQL Server
 
@@ -82,3 +82,12 @@ static void Main(string[] args)
     }
 }
 ```
+### Running build targets for development
+```
+./build.sh --target {TargetName}
+```
+or
+```
+build --target {TargetName}
+```
+Where `{TargetName}` is the name of a target in build/buid.cs
