@@ -54,6 +54,9 @@ ThrowawayDatabase.Create(username: "Zaid", password: "strongPassword", host: "19
 
 // Using a connection string where Initial Catalog is master
 ThrowawayDatabase.Create(connectionString: "Data Source=localhost\\SQLEXPRESS;Initial Catalog=master;Integrated Security=True;")
+
+// Specify a custom database prefix, otherwise it just uses ThrowawayDb
+ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS", "dbprefix_")
 ```
 
 ## Using PostgreSQL server
