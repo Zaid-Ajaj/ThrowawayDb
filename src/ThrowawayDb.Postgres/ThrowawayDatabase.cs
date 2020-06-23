@@ -12,12 +12,13 @@ namespace ThrowawayDb.Postgres
         public string Name { get; internal set; } = "";
         private bool databaseCreated = false;
         private string originalConnectionString = "";
+        private string defaultDatabaseNamePrefix = "throwawaydb";
 
-        private ThrowawayDatabase(string originalConnectionString)
+        private ThrowawayDatabase(string originalConnectionString, string databaseNamePrefix)
         {
             // Default constructor is private
             this.originalConnectionString = originalConnectionString;
-            var (derivedConnectionString, databaseName) = DeriveThrowawayConnectionString(originalConnectionString);
+            var (derivedConnectionString, databaseName) = DeriveThrowawayConnectionString(originalConnectionString, databaseNamePrefix);
             ConnectionString = derivedConnectionString;
             Name = databaseName;
         }
@@ -55,11 +56,12 @@ namespace ThrowawayDb.Postgres
             }
         }
 
-        private (string connectionString, string databaseName) DeriveThrowawayConnectionString(string originalConnectionString)
+        private (string connectionString, string databaseName) DeriveThrowawayConnectionString(string originalConnectionString, string databaseNamePrefix)
         {
             var builder = new NpgsqlConnectionStringBuilder(originalConnectionString);
+            var databasePrefix = string.IsNullOrWhiteSpace(databaseNamePrefix) ? defaultDatabaseNamePrefix : databaseNamePrefix;
 
-            var databaseName = $"throwawaydb{Guid.NewGuid().ToString("n").Substring(0, 10).ToLowerInvariant()}";
+            var databaseName = $"{databasePrefix}{Guid.NewGuid().ToString("n").Substring(0, 10).ToLowerInvariant()}";
 
             if (builder.TryGetValue("Database", out var initialDb))
             {
@@ -70,7 +72,7 @@ namespace ThrowawayDb.Postgres
             return (builder.ConnectionString, databaseName);
         }
 
-        public static ThrowawayDatabase Create(string username, string password, string host)
+        public static ThrowawayDatabase Create(string username, string password, string host, string databaseNamePrefix = null)
         {
             var connectionString = $"Host={host}; Username={username}; Password={password}; Port=5432; Database=postgres";
             if (!TryPingDatabase(connectionString))
@@ -78,7 +80,7 @@ namespace ThrowawayDb.Postgres
                 throw new Exception("Could not connect to the database");
             }
 
-            var database = new ThrowawayDatabase(connectionString);
+            var database = new ThrowawayDatabase(connectionString, databaseNamePrefix);
 
             if (!database.CreateDatabaseIfDoesNotExist())
             {
@@ -88,14 +90,14 @@ namespace ThrowawayDb.Postgres
             return database;
         }
 
-        public static ThrowawayDatabase Create(string connectionString)
+        public static ThrowawayDatabase Create(string connectionString, string databaseNamePrefix = null)
         {
             if (!TryPingDatabase(connectionString))
             {
                 throw new Exception("Could not connect to the database");
             }
 
-            var database = new ThrowawayDatabase(connectionString);
+            var database = new ThrowawayDatabase(connectionString, databaseNamePrefix);
 
             if (!database.CreateDatabaseIfDoesNotExist())
             {
