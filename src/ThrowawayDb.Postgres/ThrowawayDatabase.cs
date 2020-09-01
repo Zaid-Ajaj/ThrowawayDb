@@ -123,7 +123,7 @@ namespace ThrowawayDb.Postgres
                         using (var createCmd = new NpgsqlCommand($"CREATE DATABASE {databaseName}", otherConnection))
                         {
                             var result = createCmd.ExecuteNonQuery();
-                            Debug.Print($"Succesfully created database {databaseName}");
+                            Debug.Print($"Successfully created database {databaseName}");
                             this.databaseCreated = true;
                             creationResult = true;
                         }

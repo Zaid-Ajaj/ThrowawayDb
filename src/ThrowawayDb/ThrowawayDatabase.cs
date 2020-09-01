@@ -86,7 +86,7 @@ namespace ThrowawayDb
                                         using (var createCmd = new SqlCommand($"CREATE DATABASE {databaseName}", otherConnection))
                                         {
                                             var result = createCmd.ExecuteNonQuery();
-                                            Debug.Print($"Succesfully created database {databaseName}");
+                                            Debug.Print($"Successfully created database {databaseName}");
                                             this.databaseCreated = true;
                                             creationResult = true;
                                         }
