@@ -7,11 +7,11 @@ namespace ThrowawayDb.Postgres
     public class ThrowawayDatabase : IDisposable
     {
         /// <summary>Returns the connection string of the database that was created</summary>
-        public string ConnectionString { get; internal set; } = "";
+        public string ConnectionString { get; internal set; }
         /// <summary>Returns the name of the database that was created</summary>
-        public string Name { get; internal set; } = "";
-        private bool databaseCreated = false;
-        private string originalConnectionString = "";
+        public string Name { get; internal set; }
+        private bool databaseCreated;
+        private string originalConnectionString;
         private string defaultDatabaseNamePrefix = "throwawaydb";
 
         private ThrowawayDatabase(string originalConnectionString, string databaseNamePrefix)
@@ -110,12 +110,10 @@ namespace ThrowawayDb.Postgres
         {
             try
             {
-                var databaseName = "";
                 var builder = new NpgsqlConnectionStringBuilder(this.ConnectionString);
-                var creationResult = false;
                 if (builder.TryGetValue("Database", out var database))
                 {
-                    databaseName = database.ToString();
+                    var databaseName = database.ToString();
                     var connectionStringOfMaster = this.ConnectionString.Replace(databaseName, "postgres");
                     using (var otherConnection = new NpgsqlConnection(connectionStringOfMaster))
                     {
@@ -125,11 +123,10 @@ namespace ThrowawayDb.Postgres
                             var result = createCmd.ExecuteNonQuery();
                             Debug.Print($"Succesfully created database {databaseName}");
                             this.databaseCreated = true;
-                            creationResult = true;
                         }
                     }
 
-                    return creationResult;
+                    return true;
                 }
                 else
                 {
