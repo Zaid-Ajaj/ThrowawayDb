@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 
@@ -8,11 +7,11 @@ namespace ThrowawayDb
     public class ThrowawayDatabase : IDisposable
     {
         /// <summary>Returns the connection string of the database that was created</summary>
-        public string ConnectionString { get; internal set; } = "";
+        public string ConnectionString { get; internal set; }
         /// <summary>Returns the name of the database that was created</summary>
-        public string Name { get; internal set; } = "";
-        private bool databaseCreated = false;
-        private string originalConnectionString = "";
+        public string Name { get; internal set; }
+        private bool databaseCreated;
+        private string originalConnectionString;
         private string defaultDatabaseNamePrefix = "ThrowawayDb";
 
         private ThrowawayDatabase(string originalConnectionString, string databaseNamePrefix)
@@ -51,12 +50,10 @@ namespace ThrowawayDb
         {
             try
             {
-                var databaseName = "";
                 var builder = new SqlConnectionStringBuilder(this.ConnectionString);
-                var creationResult = false;
                 if (builder.TryGetValue("Initial Catalog", out var database))
                 {
-                    databaseName = database.ToString();
+                    var databaseName = database.ToString();
                     var connectionStringOfMaster = this.ConnectionString.Replace(databaseName, "master");
                     using (var connection = new SqlConnection(connectionStringOfMaster))
                     {
@@ -73,7 +70,6 @@ namespace ThrowawayDb
                                     {
                                         databaseExists = true;
                                         this.databaseCreated = true;
-                                        creationResult = true;
                                         break;
                                     }
                                 }
@@ -88,20 +84,18 @@ namespace ThrowawayDb
                                             var result = createCmd.ExecuteNonQuery();
                                             Debug.Print($"Successfully created database {databaseName}");
                                             this.databaseCreated = true;
-                                            creationResult = true;
                                         }
                                     }
                                 }
                                 else
                                 {
                                     this.databaseCreated = true;
-                                    creationResult = true;
                                 }
                             }
                         }
                     }
 
-                    return creationResult;
+                    return true;
                 }
                 else
                 {
