@@ -6,13 +6,16 @@ namespace ThrowawayDb
 {
 	public class ThrowawayDatabase : IDisposable
     {
+	    private const string defaultDatabaseNamePrefix = "ThrowawayDb";
+
+	    private readonly string originalConnectionString;
+	    private bool databaseCreated;
+	    private string snapshotName;
+
         /// <summary>Returns the connection string of the database that was created</summary>
         public string ConnectionString { get; internal set; }
         /// <summary>Returns the name of the database that was created</summary>
         public string Name { get; internal set; }
-        private bool databaseCreated;
-        private readonly string originalConnectionString;
-        private const string defaultDatabaseNamePrefix = "ThrowawayDb";
 
         private ThrowawayDatabase(string originalConnectionString, string databaseNamePrefix)
         {
@@ -38,6 +41,14 @@ namespace ThrowawayDb
 		        {
 			        cmd.ExecuteNonQuery();
                 }
+
+		        if (!string.IsNullOrEmpty(snapshotName))
+		        {
+			        using (var cmd = new SqlCommand($"DROP DATABASE [{snapshotName}]"))
+			        {
+				        cmd.ExecuteNonQuery();
+			        }
+		        }
 
 		        using (var cmd = new SqlCommand($"DROP DATABASE {Name}", connection))
 		        {
