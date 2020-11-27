@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 
 namespace ThrowawayDb
-{
+{ 
 	public class ThrowawayDatabase : IDisposable
     {
 	    private const string DefaultDatabaseNamePrefix = "ThrowawayDb";
@@ -28,7 +28,7 @@ namespace ThrowawayDb
         }
 
         private bool IsSnapshotCreated() =>
-	        !string.IsNullOrEmpty(_snapshotName);
+	        _databaseCreated && !string.IsNullOrEmpty(_snapshotName);
 
         private void DropDatabaseIfCreated()
         {
