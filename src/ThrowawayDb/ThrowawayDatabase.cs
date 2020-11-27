@@ -38,24 +38,17 @@ namespace ThrowawayDb
 	        using (var connection = new SqlConnection(_originalConnectionString))
 	        {
 		        connection.Open();
-
-		        var cmdText = $"ALTER DATABASE {Name} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;";
-		        using (var cmd = new SqlCommand(cmdText, connection))
-		        {
-			        cmd.ExecuteNonQuery();
-                }
+		        connection.TerminateDatabaseConnections(Name);
 
 		        if (IsSnapshotCreated())
 		        {
-			        cmdText = $"DROP DATABASE [{_snapshotName}]";
-                    using (var cmd = new SqlCommand(cmdText, connection))
+                    using (var cmd = new SqlCommand($"DROP DATABASE [{_snapshotName}]", connection))
 			        {
 				        cmd.ExecuteNonQuery();
 			        }
 		        }
 
-		        cmdText = $"DROP DATABASE {Name}";
-                using (var cmd = new SqlCommand(cmdText, connection))
+                using (var cmd = new SqlCommand($"DROP DATABASE {Name}", connection))
 		        {
 			        cmd.ExecuteNonQuery();
                 }
@@ -75,8 +68,8 @@ namespace ThrowawayDb
                 using (var connection = new SqlConnection(connectionStringOfMaster))
                 {
 	                connection.Open();
-	                var getAllDatabases = "SELECT NAME from sys.databases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb');";
-	                using (var cmd = new SqlCommand(getAllDatabases, connection))
+	                var cmdText = "SELECT NAME from sys.databases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb');";
+	                using (var cmd = new SqlCommand(cmdText, connection))
 	                {
 		                using (var reader = cmd.ExecuteReader())
 		                {
@@ -96,7 +89,9 @@ namespace ThrowawayDb
 				                using (var otherConnection = new SqlConnection(connectionStringOfMaster))
 				                {
 					                otherConnection.Open();
-					                using (var createCmd = new SqlCommand($"CREATE DATABASE {databaseName}", otherConnection))
+
+					                cmdText = $"CREATE DATABASE {databaseName}";
+                                    using (var createCmd = new SqlCommand(cmdText, otherConnection))
 					                {
 						                createCmd.ExecuteNonQuery();
 						                Debug.Print($"Successfully created database {databaseName}");
@@ -265,8 +260,16 @@ namespace ThrowawayDb
             using (var connection = new SqlConnection(_originalConnectionString))
             {
                 connection.Open();
+                connection.TerminateDatabaseConnections(Name);
 
-                var cmdText = $"RESTORE DATABASE [{Name}] FROM DATABASE_SNAPSHOT = [{_snapshotName}]";
+                var cmdText = $"RESTORE DATABASE [{Name}] FROM DATABASE_SNAPSHOT = @{nameof(_snapshotName)}";
+                using (var cmd = new SqlCommand(cmdText, connection))
+                {
+	                cmd.Parameters.AddWithValue(nameof(_snapshotName), _snapshotName);
+	                cmd.ExecuteNonQuery();
+                }
+
+                cmdText = $"ALTER DATABASE [{Name}] SET MULTI_USER";
                 using (var cmd = new SqlCommand(cmdText, connection))
                 {
 	                cmd.ExecuteNonQuery();
