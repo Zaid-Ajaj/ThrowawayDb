@@ -39,22 +39,23 @@ namespace ThrowawayDb
 	        {
 		        connection.Open();
 
-		        var resetActiveSessions = $"ALTER DATABASE {Name} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;";
-
-		        using (var cmd = new SqlCommand(resetActiveSessions, connection))
+		        var cmdText = $"ALTER DATABASE {Name} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;";
+		        using (var cmd = new SqlCommand(cmdText, connection))
 		        {
 			        cmd.ExecuteNonQuery();
                 }
 
 		        if (IsSnapshotCreated())
 		        {
-			        using (var cmd = new SqlCommand($"DROP DATABASE [{_snapshotName}]"))
+			        cmdText = $"DROP DATABASE [{_snapshotName}]";
+                    using (var cmd = new SqlCommand(cmdText, connection))
 			        {
 				        cmd.ExecuteNonQuery();
 			        }
 		        }
 
-		        using (var cmd = new SqlCommand($"DROP DATABASE {Name}", connection))
+		        cmdText = $"DROP DATABASE {Name}";
+                using (var cmd = new SqlCommand(cmdText, connection))
 		        {
 			        cmd.ExecuteNonQuery();
                 }
