@@ -14,17 +14,15 @@ namespace ThrowawayDb
         private string _snapshotName;
 
         /// <summary>Returns the connection string of the database that was created</summary>
-        public string ConnectionString { get; internal set; }
+        public string ConnectionString { get; }
         /// <summary>Returns the name of the database that was created</summary>
-        public string Name { get; internal set; }
+        public string Name { get; }
 
         private ThrowawayDatabase(string originalConnectionString, string databaseNamePrefix)
         {
             // Default constructor is private
             _originalConnectionString = originalConnectionString;
-            var (derivedConnectionString, databaseName) = DeriveThrowawayConnectionString(originalConnectionString, databaseNamePrefix);
-            ConnectionString = derivedConnectionString;
-            Name = databaseName;
+            (ConnectionString, Name) = DeriveThrowawayConnectionString(originalConnectionString, databaseNamePrefix);
         }
 
         private bool IsSnapshotCreated() =>
