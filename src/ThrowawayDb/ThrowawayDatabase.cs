@@ -219,6 +219,10 @@ namespace ThrowawayDb
             return database;
         }
 
+        /// <summary>
+        /// Creates a new snapshot of the <see cref="ThrowawayDatabase"/> in case there is no snapshot created.<br/>
+        /// Does nothing if a snapshot has already been created.
+        /// </summary>
         public void CreateSnapshot()
         {
             if (IsSnapshotCreated())
@@ -252,6 +256,10 @@ namespace ThrowawayDb
             }
         }
 
+        /// <summary>
+        /// Restores a snapshot of the <see cref="ThrowawayDatabase"/> in case the snapshot has been previously created.<br/>
+        /// Does nothing if a snapshot has not been created.
+        /// </summary>
         public void RestoreSnapshot()
         {
             if (!IsSnapshotCreated())
