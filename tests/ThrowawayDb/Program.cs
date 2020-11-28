@@ -22,7 +22,9 @@ namespace tests
 			var testCases = new Action[]
 			{
 				CreateDatabase,
-				CreateAndRestoreSnapshot
+				CreateAndRestoreSnapshot,
+				CreateSnapshotOnlyOnce,
+				NotRestoreSnapshotIfNotCreated
 			};
 
 			for (var i = 0; i < testCases.Length; i++)
@@ -117,7 +119,7 @@ namespace tests
 
 			items = GetItems(fixture).ToArray();
 			Console.WriteLine("Items before restore: {0}", FormatItems(items));
-			items.Should().BeEquivalentTo(new[] {1, 2, 3});
+			items.Should().BeEquivalentTo(new[] { 1, 2, 3 });
 
 			// Restore the snapshot
 			fixture.RestoreSnapshot();
@@ -136,6 +138,28 @@ namespace tests
 				while (reader.Read() && reader.HasRows)
 					yield return reader.GetInt32(0);
 			}
+		}
+
+		private static void CreateSnapshotOnlyOnce()
+		{
+			using var fixture = CreateFixture();
+
+			foreach (var i in Enumerable.Range(1, 3))
+			{
+				Console.WriteLine("Creating a snapshot: {0}", i);
+				fixture.CreateSnapshot();
+			}
+
+			Console.WriteLine("Restoring the snapshot");
+			fixture.RestoreSnapshot();
+		}
+
+		private static void NotRestoreSnapshotIfNotCreated()
+		{
+			using var fixture = CreateFixture();
+
+			Console.WriteLine("Restoring a snapshot which does not exist");
+			fixture.RestoreSnapshot();
 		}
 	}
 }
