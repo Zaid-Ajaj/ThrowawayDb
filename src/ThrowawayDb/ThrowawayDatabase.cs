@@ -4,14 +4,14 @@ using System.Diagnostics;
 using System.IO;
 
 namespace ThrowawayDb
-{ 
-	public class ThrowawayDatabase : IDisposable
+{
+    public class ThrowawayDatabase : IDisposable
     {
-	    private const string DefaultDatabaseNamePrefix = "ThrowawayDb";
+        private const string DefaultDatabaseNamePrefix = "ThrowawayDb";
 
-	    private readonly string _originalConnectionString;
-	    private bool _databaseCreated;
-	    private string _snapshotName;
+        private readonly string _originalConnectionString;
+        private bool _databaseCreated;
+        private string _snapshotName;
 
         /// <summary>Returns the connection string of the database that was created</summary>
         public string ConnectionString { get; internal set; }
@@ -28,29 +28,29 @@ namespace ThrowawayDb
         }
 
         private bool IsSnapshotCreated() =>
-	        _databaseCreated && !string.IsNullOrEmpty(_snapshotName);
+            _databaseCreated && !string.IsNullOrEmpty(_snapshotName);
 
         private void DropDatabaseIfCreated()
         {
-	        if (!_databaseCreated)
-		        return;
+            if (!_databaseCreated)
+                return;
 
-	        using (var connection = new SqlConnection(_originalConnectionString))
-	        {
-		        connection.Open();
-		        connection.TerminateDatabaseConnections(Name);
+            using (var connection = new SqlConnection(_originalConnectionString))
+            {
+                connection.Open();
+                connection.TerminateDatabaseConnections(Name);
 
-		        if (IsSnapshotCreated())
-		        {
+                if (IsSnapshotCreated())
+                {
                     using (var cmd = new SqlCommand($"DROP DATABASE [{_snapshotName}]", connection))
-			        {
-				        cmd.ExecuteNonQuery();
-			        }
-		        }
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
 
                 using (var cmd = new SqlCommand($"DROP DATABASE {Name}", connection))
-		        {
-			        cmd.ExecuteNonQuery();
+                {
+                    cmd.ExecuteNonQuery();
                 }
             }
         }
@@ -61,50 +61,50 @@ namespace ThrowawayDb
             {
                 var builder = new SqlConnectionStringBuilder(ConnectionString);
                 if (!builder.TryGetValue("Initial Catalog", out var database))
-	                return false;
+                    return false;
 
                 var databaseName = database.ToString();
                 var connectionStringOfMaster = ConnectionString.Replace(databaseName, "master");
                 using (var connection = new SqlConnection(connectionStringOfMaster))
                 {
-	                connection.Open();
-	                var cmdText = "SELECT NAME from sys.databases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb');";
-	                using (var cmd = new SqlCommand(cmdText, connection))
-	                {
-		                using (var reader = cmd.ExecuteReader())
-		                {
-			                var databaseExists = false;
-			                while (reader.Read())
-			                {
-				                if (reader.GetString(0) == databaseName)
-				                {
-					                databaseExists = true;
-					                _databaseCreated = true;
-					                break;
-				                }
-			                }
+                    connection.Open();
+                    var cmdText = "SELECT NAME from sys.databases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb');";
+                    using (var cmd = new SqlCommand(cmdText, connection))
+                    {
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            var databaseExists = false;
+                            while (reader.Read())
+                            {
+                                if (reader.GetString(0) == databaseName)
+                                {
+                                    databaseExists = true;
+                                    _databaseCreated = true;
+                                    break;
+                                }
+                            }
 
-			                if (!databaseExists)
-			                {
-				                using (var otherConnection = new SqlConnection(connectionStringOfMaster))
-				                {
-					                otherConnection.Open();
+                            if (!databaseExists)
+                            {
+                                using (var otherConnection = new SqlConnection(connectionStringOfMaster))
+                                {
+                                    otherConnection.Open();
 
-					                cmdText = $"CREATE DATABASE {databaseName}";
+                                    cmdText = $"CREATE DATABASE {databaseName}";
                                     using (var createCmd = new SqlCommand(cmdText, otherConnection))
-					                {
-						                createCmd.ExecuteNonQuery();
-						                Debug.Print($"Successfully created database {databaseName}");
-						                _databaseCreated = true;
-					                }
-				                }
-			                }
-			                else
-			                {
-				                _databaseCreated = true;
-			                }
-		                }
-	                }
+                                    {
+                                        createCmd.ExecuteNonQuery();
+                                        Debug.Print($"Successfully created database {databaseName}");
+                                        _databaseCreated = true;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                _databaseCreated = true;
+                            }
+                        }
+                    }
                 }
 
                 return true;
@@ -232,10 +232,10 @@ namespace ThrowawayDb
 
                 string fileName, cmdText = "SELECT TOP 1 physical_name FROM sys.master_files WHERE name = 'master'";
                 using (var cmd = new SqlCommand(cmdText, connection))
-	            {
-		            var physicalName = (string) cmd.ExecuteScalar() ?? string.Empty;
-		            fileName = Path.GetDirectoryName(physicalName);
-	            }
+                {
+                    var physicalName = (string)cmd.ExecuteScalar() ?? string.Empty;
+                    fileName = Path.GetDirectoryName(physicalName);
+                }
 
                 if (string.IsNullOrEmpty(fileName))
                     return;
@@ -245,7 +245,7 @@ namespace ThrowawayDb
                 cmdText = $"CREATE DATABASE [{snapshotName}] ON ( NAME = [{Name}], FILENAME = [{fileName}] ) AS SNAPSHOT OF [{Name}]";
                 using (var cmd = new SqlCommand(cmdText, connection))
                 {
-	                cmd.ExecuteNonQuery();
+                    cmd.ExecuteNonQuery();
                 }
 
                 _snapshotName = snapshotName;
@@ -265,14 +265,14 @@ namespace ThrowawayDb
                 var cmdText = $"RESTORE DATABASE [{Name}] FROM DATABASE_SNAPSHOT = @{nameof(_snapshotName)}";
                 using (var cmd = new SqlCommand(cmdText, connection))
                 {
-	                cmd.Parameters.AddWithValue(nameof(_snapshotName), _snapshotName);
-	                cmd.ExecuteNonQuery();
+                    cmd.Parameters.AddWithValue(nameof(_snapshotName), _snapshotName);
+                    cmd.ExecuteNonQuery();
                 }
 
                 cmdText = $"ALTER DATABASE [{Name}] SET MULTI_USER";
                 using (var cmd = new SqlCommand(cmdText, connection))
                 {
-	                cmd.ExecuteNonQuery();
+                    cmd.ExecuteNonQuery();
                 }
             }
         }
