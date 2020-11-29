@@ -27,9 +27,8 @@ public static void Main(string[] args)
         // - Seed the database with data
         // - Execute your code against this database
 
-        using (var connection = new SqlConnection(database.ConnectionString))
+        using (var connection = database.OpenConnection())
         {
-            connection.Open();
             using (var cmd = new SqlCommand("SELECT 1", connection))
             {
                 var result = Convert.ToInt32(cmd.ExecuteScalar());
@@ -57,6 +56,17 @@ ThrowawayDatabase.Create(connectionString: "Data Source=localhost\\SQLEXPRESS;In
 
 // Specify a custom database prefix, otherwise it just uses ThrowawayDb
 ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS", "dbprefix_")
+```
+
+You can create a snapshot of the database and restore it at a later point:
+```cs
+using var database = ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS");
+
+// execute necessary actions before initialising a snapshot
+database.CreateSnapshot();
+
+// execute some other actions which modify the database
+database.RestoreSnapshot();
 ```
 
 ## Using PostgreSQL server

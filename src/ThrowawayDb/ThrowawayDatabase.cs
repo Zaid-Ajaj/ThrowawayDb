@@ -1,47 +1,54 @@
 ﻿using System;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.IO;
 
 namespace ThrowawayDb
 {
     public class ThrowawayDatabase : IDisposable
     {
+        private const string DefaultDatabaseNamePrefix = "ThrowawayDb";
+
+        private readonly string _originalConnectionString;
+        private bool _databaseCreated;
+        private string _snapshotName;
+
         /// <summary>Returns the connection string of the database that was created</summary>
-        public string ConnectionString { get; internal set; }
+        public string ConnectionString { get; }
         /// <summary>Returns the name of the database that was created</summary>
-        public string Name { get; internal set; }
-        private bool databaseCreated;
-        private string originalConnectionString;
-        private string defaultDatabaseNamePrefix = "ThrowawayDb";
+        public string Name { get; }
 
         private ThrowawayDatabase(string originalConnectionString, string databaseNamePrefix)
         {
             // Default constructor is private
-            this.originalConnectionString = originalConnectionString;
-            var (derivedConnectionString, databaseName) = DeriveThrowawayConnectionString(originalConnectionString, databaseNamePrefix);
-            ConnectionString = derivedConnectionString;
-            Name = databaseName;
+            _originalConnectionString = originalConnectionString;
+            (ConnectionString, Name) = DeriveThrowawayConnectionString(originalConnectionString, databaseNamePrefix);
         }
+
+        private bool IsSnapshotCreated() =>
+            _databaseCreated && !string.IsNullOrEmpty(_snapshotName);
 
         private void DropDatabaseIfCreated()
         {
-            if (databaseCreated)
+            if (!_databaseCreated)
+                return;
+
+            using (var connection = new SqlConnection(_originalConnectionString))
             {
-                using (var connection = new SqlConnection(this.originalConnectionString))
+                connection.Open();
+                connection.TerminateDatabaseConnections(Name);
+
+                if (IsSnapshotCreated())
                 {
-                    connection.Open();
-
-                    var resetActiveSessions = $"ALTER DATABASE {Name} SET SINGLE_USER WITH ROLLBACK IMMEDIATE;";
-
-                    using (var cmd = new SqlCommand(resetActiveSessions, connection))
+                    using (var cmd = new SqlCommand($"DROP DATABASE [{_snapshotName}]", connection))
                     {
                         cmd.ExecuteNonQuery();
                     }
+                }
 
-                    using (var cmd = new SqlCommand($"DROP DATABASE {Name}", connection))
-                    {
-                        var result = cmd.ExecuteNonQuery();
-                    }
+                using (var cmd = new SqlCommand($"DROP DATABASE {Name}", connection))
+                {
+                    cmd.ExecuteNonQuery();
                 }
             }
         }
@@ -50,57 +57,56 @@ namespace ThrowawayDb
         {
             try
             {
-                var builder = new SqlConnectionStringBuilder(this.ConnectionString);
-                if (builder.TryGetValue("Initial Catalog", out var database))
-                {
-                    var databaseName = database.ToString();
-                    var connectionStringOfMaster = this.ConnectionString.Replace(databaseName, "master");
-                    using (var connection = new SqlConnection(connectionStringOfMaster))
-                    {
-                        connection.Open();
-                        var getAllDatabases = "SELECT NAME from sys.databases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb');";
-                        using (var cmd = new SqlCommand(getAllDatabases, connection))
-                        {
-                            using (var reader = cmd.ExecuteReader())
-                            {
-                                var databaseExists = false;
-                                while (reader.Read())
-                                {
-                                    if (reader.GetString(0) == databaseName)
-                                    {
-                                        databaseExists = true;
-                                        this.databaseCreated = true;
-                                        break;
-                                    }
-                                }
+                var builder = new SqlConnectionStringBuilder(ConnectionString);
+                if (!builder.TryGetValue("Initial Catalog", out var database))
+                    return false;
 
-                                if (!databaseExists)
+                var databaseName = database.ToString();
+                var connectionStringOfMaster = ConnectionString.Replace(databaseName, "master");
+                using (var connection = new SqlConnection(connectionStringOfMaster))
+                {
+                    connection.Open();
+                    var cmdText = "SELECT NAME from sys.databases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb');";
+                    using (var cmd = new SqlCommand(cmdText, connection))
+                    {
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            var databaseExists = false;
+                            while (reader.Read())
+                            {
+                                if (reader.GetString(0) == databaseName)
                                 {
-                                    using (var otherConnection = new SqlConnection(connectionStringOfMaster))
+                                    databaseExists = true;
+                                    _databaseCreated = true;
+                                    break;
+                                }
+                            }
+
+                            if (!databaseExists)
+                            {
+                                using (var otherConnection = new SqlConnection(connectionStringOfMaster))
+                                {
+                                    otherConnection.Open();
+
+                                    cmdText = $"CREATE DATABASE {databaseName}";
+                                    using (var createCmd = new SqlCommand(cmdText, otherConnection))
                                     {
-                                        otherConnection.Open();
-                                        using (var createCmd = new SqlCommand($"CREATE DATABASE {databaseName}", otherConnection))
-                                        {
-                                            var result = createCmd.ExecuteNonQuery();
-                                            Debug.Print($"Successfully created database {databaseName}");
-                                            this.databaseCreated = true;
-                                        }
+                                        createCmd.ExecuteNonQuery();
+                                        Debug.Print($"Successfully created database {databaseName}");
+                                        _databaseCreated = true;
                                     }
                                 }
-                                else
-                                {
-                                    this.databaseCreated = true;
-                                }
+                            }
+                            else
+                            {
+                                _databaseCreated = true;
                             }
                         }
                     }
+                }
 
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return true;
+
             }
             catch
             {
@@ -117,7 +123,7 @@ namespace ThrowawayDb
                     connection.Open();
                     using (var cmd = new SqlCommand("SELECT GETDATE()", connection))
                     {
-                        var result = cmd.ExecuteScalar();
+                        cmd.ExecuteScalar();
                         return true;
                     }
                 }
@@ -132,14 +138,14 @@ namespace ThrowawayDb
             }
         }
 
-        private (string connectionString, string databaseName) DeriveThrowawayConnectionString(string originalConnectionString, string databaseNamePrefix)
+        private static (string connectionString, string databaseName) DeriveThrowawayConnectionString(string originalConnectionString, string databaseNamePrefix)
         {
             var builder = new SqlConnectionStringBuilder(originalConnectionString);
-            var databasePrefix = string.IsNullOrWhiteSpace(databaseNamePrefix) ? defaultDatabaseNamePrefix : databaseNamePrefix;
+            var databasePrefix = string.IsNullOrWhiteSpace(databaseNamePrefix) ? DefaultDatabaseNamePrefix : databaseNamePrefix;
 
             var databaseName = $"{databasePrefix}{Guid.NewGuid().ToString("n").Substring(0, 10)}";
 
-            if (builder.TryGetValue("Initial Catalog", out var initialDb))
+            if (builder.TryGetValue("Initial Catalog", out _))
             {
                 builder.Remove("Initial Catalog");
             }
@@ -173,9 +179,9 @@ namespace ThrowawayDb
         /// <summary>
         /// Creates a database through SQL server authentication using the given username, password and the datasource/instance.
         /// </summary>
-        public static ThrowawayDatabase Create(string username, string password, string datasource, string databaseNamePrefix = null)
+        public static ThrowawayDatabase Create(string username, string password, string dataSource, string databaseNamePrefix = null)
         {
-            var connectionString = $"Password={password};Persist Security Info=True;User ID={username};Initial Catalog=master;Data Source={datasource}";
+            var connectionString = $"Password={password};Persist Security Info=True;User ID={username};Initial Catalog=master;Data Source={dataSource}";
             if (!TryPingDatabase(connectionString))
             {
                 throw new Exception("Could not connect to the database");
@@ -201,7 +207,7 @@ namespace ThrowawayDb
                 throw new Exception("Could not connect to the database");
             }
 
-            var database = new ThrowawayDatabase(connectionString ?? "", databaseNamePrefix);
+            var database = new ThrowawayDatabase(connectionString ?? string.Empty, databaseNamePrefix);
 
             if (!database.CreateDatabaseIfDoesNotExist())
             {
@@ -209,6 +215,72 @@ namespace ThrowawayDb
             }
 
             return database;
+        }
+
+        /// <summary>
+        /// Creates a new snapshot of the <see cref="ThrowawayDatabase"/> in case there is no snapshot created.<br/>
+        /// Does nothing if a snapshot has already been created.
+        /// </summary>
+        public void CreateSnapshot()
+        {
+            if (IsSnapshotCreated())
+                return;
+
+            var snapshotName = $"{Name}_ss";
+
+            using (var connection = new SqlConnection(_originalConnectionString))
+            {
+                connection.Open();
+
+                string fileName, cmdText = "SELECT TOP 1 physical_name FROM sys.master_files WHERE name = 'master'";
+                using (var cmd = new SqlCommand(cmdText, connection))
+                {
+                    var physicalName = (string)cmd.ExecuteScalar() ?? string.Empty;
+                    fileName = Path.GetDirectoryName(physicalName);
+                }
+
+                if (string.IsNullOrEmpty(fileName))
+                    return;
+
+                fileName = Path.Combine(fileName, $"{snapshotName}.ss");
+
+                cmdText = $"CREATE DATABASE [{snapshotName}] ON ( NAME = [{Name}], FILENAME = [{fileName}] ) AS SNAPSHOT OF [{Name}]";
+                using (var cmd = new SqlCommand(cmdText, connection))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+
+                _snapshotName = snapshotName;
+            }
+        }
+
+        /// <summary>
+        /// Restores a snapshot of the <see cref="ThrowawayDatabase"/> in case the snapshot has been previously created.<br/>
+        /// Does nothing if a snapshot has not been created.
+        /// </summary>
+        public void RestoreSnapshot()
+        {
+            if (!IsSnapshotCreated())
+                return;
+
+            using (var connection = new SqlConnection(_originalConnectionString))
+            {
+                connection.Open();
+                connection.TerminateDatabaseConnections(Name);
+
+                var cmdText = $"RESTORE DATABASE [{Name}] FROM DATABASE_SNAPSHOT = @{nameof(_snapshotName)}";
+                using (var cmd = new SqlCommand(cmdText, connection))
+                {
+                    cmd.Parameters.AddWithValue(nameof(_snapshotName), _snapshotName);
+                    cmd.ExecuteNonQuery();
+                }
+
+                cmdText = $"ALTER DATABASE [{Name}] SET MULTI_USER";
+                using (var cmd = new SqlCommand(cmdText, connection))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
         }
 
         public void Dispose() => DropDatabaseIfCreated();
