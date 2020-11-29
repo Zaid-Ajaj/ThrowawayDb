@@ -8,8 +8,9 @@
     <PackageIconUrl></PackageIconUrl>
     <PackageTags>sql; sql-server; integration tests; tests</PackageTags>
     <Authors>Zaid Ajaj</Authors>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageReleaseNotes>Implement database snapshot</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
