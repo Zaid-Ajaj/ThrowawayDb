@@ -95,7 +95,7 @@ namespace Tests
 		[Fact(DisplayName = "Create a new database with options (Collation)")]
 		public void CreateDatabaseWithCollationOptions()
 		{
-			const string collation = "Latin1_General_CI_AS";
+			const string collation = "Japanese_CI_AS";
 
 			using var fixture = ThrowawayDatabase.FromLocalInstance(LocalInstanceName, new ThrowawayDatabaseOptions
 			{
@@ -115,7 +115,7 @@ namespace Tests
 		public void CreateDatabaseWithPrefixCollationOptions()
 		{
 			const string prefix = nameof(prefix),
-				collation = "Latin1_General_CI_AS";
+				collation = "Japanese_CI_AS";
 
 			using var fixture = ThrowawayDatabase.FromLocalInstance(LocalInstanceName, new ThrowawayDatabaseOptions
 			{
