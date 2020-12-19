@@ -172,18 +172,7 @@ namespace ThrowawayDb
         public static ThrowawayDatabase FromLocalInstance(string instance, ThrowawayDatabaseOptions options)
         {
             var connectionString = $"Data Source={instance};Initial Catalog=master;Integrated Security=True;";
-            if (!TryPingDatabase(connectionString))
-            {
-                throw new Exception("Could not connect to the database");
-            }
-
-            var database = new ThrowawayDatabase(connectionString, options);
-            if (!database.CreateDatabaseIfDoesNotExist(options))
-            {
-                throw new Exception("Could not create the throwaway database");
-            }
-
-            return database;
+            return Create(connectionString, options);
         }
 
         /// <summary>
