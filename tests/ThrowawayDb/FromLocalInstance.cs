@@ -34,7 +34,7 @@ namespace Tests
 		{
 			const string prefix = nameof(prefix);
 
-			using var fixture = ThrowawayDatabase.FromLocalInstance(LocalInstanceName);
+			using var fixture = ThrowawayDatabase.FromLocalInstance(LocalInstanceName, prefix);
 
 			fixture.Name
 				.Should()
@@ -81,7 +81,7 @@ namespace Tests
 		[Fact(DisplayName = "Create a new database with options (Collation)")]
 		public void CreateDatabaseWithCollationOptions()
 		{
-			const string collation = "Japanese_90_CI_AS_KI";
+			const string collation = "Latin1_General_CI_AS";
 
 			using var fixture = ThrowawayDatabase.FromLocalInstance(LocalInstanceName, new ThrowawayDatabaseOptions
 			{
@@ -101,7 +101,7 @@ namespace Tests
 		public void CreateDatabaseWithPrefixCollationOptions()
 		{
 			const string prefix = nameof(prefix),
-				collation = "Japanese_90_CI_AS_KI";
+				collation = "Latin1_General_CI_AS";
 
 			using var fixture = ThrowawayDatabase.FromLocalInstance(LocalInstanceName, new ThrowawayDatabaseOptions
 			{
