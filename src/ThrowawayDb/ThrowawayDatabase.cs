@@ -157,75 +157,80 @@ namespace ThrowawayDb
         /// <summary>
         /// Uses the given instance as the Data Source of the connection string along with integration security assuming that the current user has direct access to his or her Sql server instance.
         /// </summary>
-        public static ThrowawayDatabase FromLocalInstance(string instance, string databaseNamePrefix = null)
+        public static ThrowawayDatabase FromLocalInstance(string instance, string databaseNamePrefix = null) =>
+	        FromLocalInstance(instance, new ThrowawayDatabaseOptions
+	        {
+		        DatabaseNamePrefix = databaseNamePrefix
+	        });
+
+        /// <summary>
+        /// Uses the given instance as the Data Source of the connection string along with integration security assuming that the current user has direct access to his or her Sql server instance.
+        /// </summary>
+        public static ThrowawayDatabase FromLocalInstance(string instance, ThrowawayDatabaseOptions options)
         {
-            var connectionString = $"Data Source={instance};Initial Catalog=master;Integrated Security=True;";
+	        var connectionString = $"Data Source={instance};Initial Catalog=master;Integrated Security=True;";
 
-            if (!TryPingDatabase(connectionString))
-            {
-                throw new Exception("Could not connect to the database");
-            }
+	        if (!TryPingDatabase(connectionString))
+	        {
+		        throw new Exception("Could not connect to the database");
+	        }
 
-            var database = new ThrowawayDatabase(connectionString, new ThrowawayDatabaseOptions
-            {
-                DatabaseNamePrefix = databaseNamePrefix
-            });
+	        var database = new ThrowawayDatabase(connectionString, options);
+	        if (!database.CreateDatabaseIfDoesNotExist())
+	        {
+		        throw new Exception("Could not create the throwaway database");
+	        }
 
-            if (!database.CreateDatabaseIfDoesNotExist())
-            {
-                throw new Exception("Could not create the throwaway database");
-            }
+	        return database;
+        }
 
-            return database;
+        /// <summary>
+        /// Creates a throwaway database using the connection string provided. No need to set the Initial Catalog as it will get replaced by the name of the database that will be created.
+        /// </summary>
+        public static ThrowawayDatabase Create(string connectionString, ThrowawayDatabaseOptions options)
+        {
+	        if (!TryPingDatabase(connectionString))
+	        {
+		        throw new Exception("Could not connect to the database");
+	        }
+
+	        var database = new ThrowawayDatabase(connectionString ?? string.Empty, options);
+
+	        if (!database.CreateDatabaseIfDoesNotExist())
+	        {
+		        throw new Exception("Could not create the throwaway database");
+	        }
+
+	        return database;
         }
 
         /// <summary>
         /// Creates a database through SQL server authentication using the given username, password and the datasource/instance.
         /// </summary>
-        public static ThrowawayDatabase Create(string username, string password, string dataSource, string databaseNamePrefix = null)
+        public static ThrowawayDatabase Create(string username, string password, string dataSource, ThrowawayDatabaseOptions options)
         {
-            var connectionString = $"Password={password};Persist Security Info=True;User ID={username};Initial Catalog=master;Data Source={dataSource}";
-            if (!TryPingDatabase(connectionString))
-            {
-                throw new Exception("Could not connect to the database");
-            }
-
-            var database = new ThrowawayDatabase(connectionString, new ThrowawayDatabaseOptions
-            {
-                DatabaseNamePrefix = databaseNamePrefix
-            });
-            
-            if (!database.CreateDatabaseIfDoesNotExist())
-            {
-                throw new Exception("Could not create the throwaway database");
-            }
-
-            return database;
+	        var connectionString = $"Password={password};Persist Security Info=True;User ID={username};Initial Catalog=master;Data Source={dataSource}";
+	        return Create(connectionString, options);
         }
+
+        /// <summary>
+        /// Creates a database through SQL server authentication using the given username, password and the datasource/instance.
+        /// </summary>
+        public static ThrowawayDatabase Create(string username, string password, string dataSource, string databaseNamePrefix = null) =>
+	        Create(username, password, dataSource, new ThrowawayDatabaseOptions
+	        {
+		        DatabaseNamePrefix = databaseNamePrefix
+            });
 
 
         /// <summary>
         /// Creates a throwaway database using the connection string provided. No need to set the Initial Catalog as it will get replaced by the name of the database that will be created.
         /// </summary>
-        public static ThrowawayDatabase Create(string connectionString, string databaseNamePrefix = null)
-        {
-            if (!TryPingDatabase(connectionString))
-            {
-                throw new Exception("Could not connect to the database");
-            }
-
-            var database = new ThrowawayDatabase(connectionString ?? string.Empty, new ThrowawayDatabaseOptions
-            {
-                DatabaseNamePrefix = databaseNamePrefix
-            });
-
-            if (!database.CreateDatabaseIfDoesNotExist())
-            {
-                throw new Exception("Could not create the throwaway database");
-            }
-
-            return database;
-        }
+        public static ThrowawayDatabase Create(string connectionString, string databaseNamePrefix = null) =>
+	        Create(connectionString, new ThrowawayDatabaseOptions
+	        {
+		        DatabaseNamePrefix = databaseNamePrefix
+	        });
 
         /// <summary>
         /// Creates a new snapshot of the <see cref="ThrowawayDatabase"/> in case there is no snapshot created.<br/>
