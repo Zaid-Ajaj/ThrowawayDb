@@ -259,7 +259,6 @@ namespace ThrowawayDb
 
                 fileName = Path.Combine(fileName, $"{snapshotName}.ss");
 
-                // TODO: apply collation here?
                 cmdText = $"CREATE DATABASE [{snapshotName}] ON ( NAME = [{Name}], FILENAME = [{fileName}] ) AS SNAPSHOT OF [{Name}]";
                 using (var cmd = new SqlCommand(cmdText, connection))
                 {
