@@ -53,7 +53,7 @@ namespace ThrowawayDb
             }
         }
 
-        private bool CreateDatabaseIfDoesNotExist()
+        private bool CreateDatabaseIfDoesNotExist(ThrowawayDatabaseOptions options)
         {
             try
             {
@@ -89,6 +89,9 @@ namespace ThrowawayDb
                                     otherConnection.Open();
 
                                     cmdText = $"CREATE DATABASE {databaseName}";
+                                    if (!string.IsNullOrWhiteSpace(options.Collation))
+	                                    cmdText += $" COLLATE {options.Collation}";
+                                    
                                     using (var createCmd = new SqlCommand(cmdText, otherConnection))
                                     {
                                         createCmd.ExecuteNonQuery();
@@ -176,7 +179,7 @@ namespace ThrowawayDb
 	        }
 
 	        var database = new ThrowawayDatabase(connectionString, options);
-	        if (!database.CreateDatabaseIfDoesNotExist())
+	        if (!database.CreateDatabaseIfDoesNotExist(options))
 	        {
 		        throw new Exception("Could not create the throwaway database");
 	        }
@@ -195,8 +198,7 @@ namespace ThrowawayDb
 	        }
 
 	        var database = new ThrowawayDatabase(connectionString ?? string.Empty, options);
-
-	        if (!database.CreateDatabaseIfDoesNotExist())
+	        if (!database.CreateDatabaseIfDoesNotExist(options))
 	        {
 		        throw new Exception("Could not create the throwaway database");
 	        }
@@ -259,6 +261,7 @@ namespace ThrowawayDb
 
                 fileName = Path.Combine(fileName, $"{snapshotName}.ss");
 
+                // TODO: apply collation here?
                 cmdText = $"CREATE DATABASE [{snapshotName}] ON ( NAME = [{Name}], FILENAME = [{fileName}] ) AS SNAPSHOT OF [{Name}]";
                 using (var cmd = new SqlCommand(cmdText, connection))
                 {
