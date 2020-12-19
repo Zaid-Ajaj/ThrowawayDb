@@ -121,6 +121,29 @@ namespace Tests
 				.BeTrue();
 		}
 
+		[Theory(DisplayName = "Create a new database with a user name and password, but without a collation if it is null or a white space")]
+		[InlineData(null)]
+		[InlineData("")]
+		[InlineData(" ")]
+		public void CreateDatabaseWithUserNamePasswordCollationNullOrWhiteSpace(string collation)
+		{
+			const string prefix = nameof(prefix);
+
+			using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, new ThrowawayDatabaseOptions
+			{
+				DatabaseNamePrefix = prefix,
+				Collation = collation
+			});
+
+			fixture.Name
+				.Should()
+				.StartWith(prefix);
+
+			CheckCommandExecution(fixture)
+				.Should()
+				.BeTrue();
+		}
+
 		[Fact(DisplayName = "Create a new database with a connection string")]
 		public void CreateDatabaseWithConnectionString()
 		{
@@ -274,6 +297,37 @@ namespace Tests
 			GetCollation(fixture)
 				.Should()
 				.Be(collation);
+
+			CheckCommandExecution(fixture)
+				.Should()
+				.BeTrue();
+		}
+
+		[Theory(DisplayName = "Create a new database with a connection string, but without a collation if it is null or a white space")]
+		[InlineData(null)]
+		[InlineData("")]
+		[InlineData(" ")]
+		public void CreateDatabaseWithConnectionStringWithoutCollationIfNullOrWhiteSpace(string collation)
+		{
+			const string prefix = nameof(prefix);
+
+			var connectionString = new SqlConnectionStringBuilder
+			{
+				PersistSecurityInfo = true,
+				DataSource = LocalInstanceName,
+				UserID = UserName,
+				Password = Password
+			}.ConnectionString;
+
+			using var fixture = ThrowawayDatabase.Create(connectionString, new ThrowawayDatabaseOptions
+			{
+				DatabaseNamePrefix = prefix,
+				Collation = collation
+			});
+
+			fixture.Name
+				.Should()
+				.StartWith(prefix);
 
 			CheckCommandExecution(fixture)
 				.Should()

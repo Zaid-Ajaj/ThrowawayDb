@@ -109,6 +109,10 @@ namespace Tests
 			GetCollation(fixture)
 				.Should()
 				.Be(collation);
+
+			CheckCommandExecution(fixture)
+				.Should()
+				.BeTrue();
 		}
 
 		[Fact(DisplayName = "Create a new database with options (Prefix, Collation)")]
@@ -130,6 +134,33 @@ namespace Tests
 			GetCollation(fixture)
 				.Should()
 				.Be(collation);
+
+			CheckCommandExecution(fixture)
+				.Should()
+				.BeTrue();
+		}
+
+		[Theory(DisplayName = "Create a new database if a collation is null or a white space")]
+		[InlineData(null)]
+		[InlineData("")]
+		[InlineData(" ")]
+		public void CreateDatabaseWithoutCollationIfNullOrWhiteSpace(string collation)
+		{
+			const string prefix = nameof(prefix);
+
+			using var fixture = ThrowawayDatabase.FromLocalInstance(LocalInstanceName, new ThrowawayDatabaseOptions
+			{
+				DatabaseNamePrefix = prefix,
+				Collation = collation
+			});
+
+			fixture.Name
+				.Should()
+				.StartWith(prefix);
+
+			CheckCommandExecution(fixture)
+				.Should()
+				.BeTrue();
 		}
 	}
 }
