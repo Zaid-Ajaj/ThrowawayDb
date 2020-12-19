@@ -16,12 +16,12 @@ namespace Tests
 			return Convert.ToInt32(cmd.ExecuteScalar()) == 1;
 		}
 
-		public static string GetCollation(ThrowawayDatabase fixture)
+		public static string GetCollation(ThrowawayDatabase fixture, string name = null)
 		{
 			using var connection = fixture.OpenConnection();
 
 			using var cmd = new SqlCommand("SELECT collation_name FROM sys.databases WHERE name = @name", connection);
-			cmd.Parameters.AddWithValue("name", fixture.Name);
+			cmd.Parameters.AddWithValue("name", name ?? fixture.Name);
 
 			return Convert.ToString(cmd.ExecuteScalar());
 		}
