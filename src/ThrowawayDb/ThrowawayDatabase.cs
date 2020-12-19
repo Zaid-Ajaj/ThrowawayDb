@@ -18,11 +18,11 @@ namespace ThrowawayDb
         /// <summary>Returns the name of the database that was created</summary>
         public string Name { get; }
 
-        private ThrowawayDatabase(string originalConnectionString, string databaseNamePrefix)
+        private ThrowawayDatabase(string originalConnectionString, ThrowawayDatabaseOptions options)
         {
             // Default constructor is private
             _originalConnectionString = originalConnectionString;
-            (ConnectionString, Name) = DeriveThrowawayConnectionString(originalConnectionString, databaseNamePrefix);
+            (ConnectionString, Name) = DeriveThrowawayConnectionString(originalConnectionString, options);
         }
 
         private bool IsSnapshotCreated() =>
@@ -53,7 +53,7 @@ namespace ThrowawayDb
             }
         }
 
-        private bool CreateDatabaseIfDoesNotExist()
+        private bool CreateDatabaseIfDoesNotExist(ThrowawayDatabaseOptions options)
         {
             try
             {
@@ -89,6 +89,9 @@ namespace ThrowawayDb
                                     otherConnection.Open();
 
                                     cmdText = $"CREATE DATABASE {databaseName}";
+                                    if (!string.IsNullOrWhiteSpace(options.Collation))
+                                        cmdText += $" COLLATE {options.Collation}";
+
                                     using (var createCmd = new SqlCommand(cmdText, otherConnection))
                                     {
                                         createCmd.ExecuteNonQuery();
@@ -138,10 +141,10 @@ namespace ThrowawayDb
             }
         }
 
-        private static (string connectionString, string databaseName) DeriveThrowawayConnectionString(string originalConnectionString, string databaseNamePrefix)
+        private static (string connectionString, string databaseName) DeriveThrowawayConnectionString(string originalConnectionString, ThrowawayDatabaseOptions options)
         {
             var builder = new SqlConnectionStringBuilder(originalConnectionString);
-            var databasePrefix = string.IsNullOrWhiteSpace(databaseNamePrefix) ? DefaultDatabaseNamePrefix : databaseNamePrefix;
+            var databasePrefix = string.IsNullOrWhiteSpace(options.DatabaseNamePrefix) ? DefaultDatabaseNamePrefix : options.DatabaseNamePrefix;
 
             var databaseName = $"{databasePrefix}{Guid.NewGuid().ToString("n").Substring(0, 10)}";
 
@@ -157,59 +160,60 @@ namespace ThrowawayDb
         /// <summary>
         /// Uses the given instance as the Data Source of the connection string along with integration security assuming that the current user has direct access to his or her Sql server instance.
         /// </summary>
-        public static ThrowawayDatabase FromLocalInstance(string instance, string databaseNamePrefix = null)
+        public static ThrowawayDatabase FromLocalInstance(string instance, string databaseNamePrefix = null) =>
+            FromLocalInstance(instance, new ThrowawayDatabaseOptions
+            {
+                DatabaseNamePrefix = databaseNamePrefix
+            });
+
+        /// <summary>
+        /// Uses the given instance as the Data Source of the connection string along with integration security assuming that the current user has direct access to his or her Sql server instance.
+        /// </summary>
+        public static ThrowawayDatabase FromLocalInstance(string instance, ThrowawayDatabaseOptions options)
         {
             var connectionString = $"Data Source={instance};Initial Catalog=master;Integrated Security=True;";
-
-            if (!TryPingDatabase(connectionString))
-            {
-                throw new Exception("Could not connect to the database");
-            }
-
-            var database = new ThrowawayDatabase(connectionString, databaseNamePrefix);
-
-            if (!database.CreateDatabaseIfDoesNotExist())
-            {
-                throw new Exception("Could not create the throwaway database");
-            }
-
-            return database;
+            return Create(connectionString, options);
         }
 
         /// <summary>
         /// Creates a database through SQL server authentication using the given username, password and the datasource/instance.
         /// </summary>
-        public static ThrowawayDatabase Create(string username, string password, string dataSource, string databaseNamePrefix = null)
+        public static ThrowawayDatabase Create(string username, string password, string dataSource, string databaseNamePrefix = null) =>
+            Create(username, password, dataSource, new ThrowawayDatabaseOptions
+            {
+                DatabaseNamePrefix = databaseNamePrefix
+            });
+
+        /// <summary>
+        /// Creates a database through SQL server authentication using the given username, password and the datasource/instance.
+        /// </summary>
+        public static ThrowawayDatabase Create(string username, string password, string dataSource, ThrowawayDatabaseOptions options)
         {
             var connectionString = $"Password={password};Persist Security Info=True;User ID={username};Initial Catalog=master;Data Source={dataSource}";
-            if (!TryPingDatabase(connectionString))
-            {
-                throw new Exception("Could not connect to the database");
-            }
-
-            var database = new ThrowawayDatabase(connectionString, databaseNamePrefix);
-            if (!database.CreateDatabaseIfDoesNotExist())
-            {
-                throw new Exception("Could not create the throwaway database");
-            }
-
-            return database;
+            return Create(connectionString, options);
         }
-
 
         /// <summary>
         /// Creates a throwaway database using the connection string provided. No need to set the Initial Catalog as it will get replaced by the name of the database that will be created.
         /// </summary>
-        public static ThrowawayDatabase Create(string connectionString, string databaseNamePrefix = null)
+        public static ThrowawayDatabase Create(string connectionString, string databaseNamePrefix = null) =>
+            Create(connectionString, new ThrowawayDatabaseOptions
+            {
+                DatabaseNamePrefix = databaseNamePrefix
+            });
+
+        /// <summary>
+        /// Creates a throwaway database using the connection string provided. No need to set the Initial Catalog as it will get replaced by the name of the database that will be created.
+        /// </summary>
+        public static ThrowawayDatabase Create(string connectionString, ThrowawayDatabaseOptions options)
         {
             if (!TryPingDatabase(connectionString))
             {
                 throw new Exception("Could not connect to the database");
             }
 
-            var database = new ThrowawayDatabase(connectionString ?? string.Empty, databaseNamePrefix);
-
-            if (!database.CreateDatabaseIfDoesNotExist())
+            var database = new ThrowawayDatabase(connectionString ?? string.Empty, options);
+            if (!database.CreateDatabaseIfDoesNotExist(options))
             {
                 throw new Exception("Could not create the throwaway database");
             }
