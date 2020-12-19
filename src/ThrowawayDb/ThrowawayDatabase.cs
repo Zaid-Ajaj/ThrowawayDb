@@ -18,11 +18,11 @@ namespace ThrowawayDb
         /// <summary>Returns the name of the database that was created</summary>
         public string Name { get; }
 
-        private ThrowawayDatabase(string originalConnectionString, string databaseNamePrefix)
+        private ThrowawayDatabase(string originalConnectionString, ThrowawayDatabaseOptions options)
         {
             // Default constructor is private
             _originalConnectionString = originalConnectionString;
-            (ConnectionString, Name) = DeriveThrowawayConnectionString(originalConnectionString, databaseNamePrefix);
+            (ConnectionString, Name) = DeriveThrowawayConnectionString(originalConnectionString, options);
         }
 
         private bool IsSnapshotCreated() =>
@@ -138,10 +138,10 @@ namespace ThrowawayDb
             }
         }
 
-        private static (string connectionString, string databaseName) DeriveThrowawayConnectionString(string originalConnectionString, string databaseNamePrefix)
+        private static (string connectionString, string databaseName) DeriveThrowawayConnectionString(string originalConnectionString, ThrowawayDatabaseOptions options)
         {
             var builder = new SqlConnectionStringBuilder(originalConnectionString);
-            var databasePrefix = string.IsNullOrWhiteSpace(databaseNamePrefix) ? DefaultDatabaseNamePrefix : databaseNamePrefix;
+            var databasePrefix = string.IsNullOrWhiteSpace(options.DatabaseNamePrefix) ? DefaultDatabaseNamePrefix : options.DatabaseNamePrefix;
 
             var databaseName = $"{databasePrefix}{Guid.NewGuid().ToString("n").Substring(0, 10)}";
 
@@ -166,7 +166,10 @@ namespace ThrowawayDb
                 throw new Exception("Could not connect to the database");
             }
 
-            var database = new ThrowawayDatabase(connectionString, databaseNamePrefix);
+            var database = new ThrowawayDatabase(connectionString, new ThrowawayDatabaseOptions
+            {
+                DatabaseNamePrefix = databaseNamePrefix
+            });
 
             if (!database.CreateDatabaseIfDoesNotExist())
             {
@@ -187,7 +190,11 @@ namespace ThrowawayDb
                 throw new Exception("Could not connect to the database");
             }
 
-            var database = new ThrowawayDatabase(connectionString, databaseNamePrefix);
+            var database = new ThrowawayDatabase(connectionString, new ThrowawayDatabaseOptions
+            {
+                DatabaseNamePrefix = databaseNamePrefix
+            });
+            
             if (!database.CreateDatabaseIfDoesNotExist())
             {
                 throw new Exception("Could not create the throwaway database");
@@ -207,7 +214,10 @@ namespace ThrowawayDb
                 throw new Exception("Could not connect to the database");
             }
 
-            var database = new ThrowawayDatabase(connectionString ?? string.Empty, databaseNamePrefix);
+            var database = new ThrowawayDatabase(connectionString ?? string.Empty, new ThrowawayDatabaseOptions
+            {
+                DatabaseNamePrefix = databaseNamePrefix
+            });
 
             if (!database.CreateDatabaseIfDoesNotExist())
             {
