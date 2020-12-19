@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Data.SqlClient;
+using FluentAssertions;
 using ThrowawayDb;
 using Xunit;
 
@@ -27,6 +29,18 @@ namespace Tests
 			DatabaseExists(databaseName)
 				.Should()
 				.BeFalse();
+
+			static bool DatabaseExists(string name)
+			{
+				using var connection = new SqlConnection("Data Source=" + LocalInstanceName + ";Initial Catalog=master;Integrated Security=True;");
+				connection.Open();
+
+				using var cmd = new SqlCommand($"SELECT CASE WHEN DB_ID(@{nameof(name)}) IS NULL THEN 0 ELSE 1 END", connection);
+				cmd.Parameters.AddWithValue(nameof(name), name);
+
+				var result = cmd.ExecuteScalar();
+				return Convert.ToInt32(result) == 1;
+			}
 		}
 
 		[Fact(DisplayName = "Create a new database with a custom prefix")]

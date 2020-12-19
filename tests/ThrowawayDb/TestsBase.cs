@@ -6,20 +6,7 @@ namespace Tests
 {
 	public abstract class TestsBase
 	{
-		protected const string LocalInstanceName = "localhost\\SQLEXPRESS",
-			GlobalConnectionString = "Data Source=" + LocalInstanceName + ";Initial Catalog=master;Integrated Security=True;";
-
-		protected static bool DatabaseExists(string name)
-		{
-			using var connection = new SqlConnection(GlobalConnectionString);
-			connection.Open();
-
-			using var cmd = new SqlCommand($"SELECT CASE WHEN DB_ID(@{nameof(name)}) IS NULL THEN 0 ELSE 1 END", connection);
-			cmd.Parameters.AddWithValue(nameof(name), name);
-
-			var result = cmd.ExecuteScalar();
-			return Convert.ToInt32(result) == 1;
-		}
+		protected const string LocalInstanceName = "localhost\\SQLEXPRESS";
 
 		protected static bool CheckCommandExecution(ThrowawayDatabase fixture)
 		{

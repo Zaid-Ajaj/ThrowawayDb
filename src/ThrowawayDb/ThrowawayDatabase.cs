@@ -188,6 +188,34 @@ namespace ThrowawayDb
         }
 
         /// <summary>
+        /// Creates a database through SQL server authentication using the given username, password and the datasource/instance.
+        /// </summary>
+        public static ThrowawayDatabase Create(string username, string password, string dataSource, string databaseNamePrefix = null) =>
+	        Create(username, password, dataSource, new ThrowawayDatabaseOptions
+	        {
+		        DatabaseNamePrefix = databaseNamePrefix
+	        });
+
+
+        /// <summary>
+        /// Creates a throwaway database using the connection string provided. No need to set the Initial Catalog as it will get replaced by the name of the database that will be created.
+        /// </summary>
+        public static ThrowawayDatabase Create(string connectionString, string databaseNamePrefix = null) =>
+	        Create(connectionString, new ThrowawayDatabaseOptions
+	        {
+		        DatabaseNamePrefix = databaseNamePrefix
+	        });
+
+        /// <summary>
+        /// Creates a database through SQL server authentication using the given username, password and the datasource/instance.
+        /// </summary>
+        public static ThrowawayDatabase Create(string username, string password, string dataSource, ThrowawayDatabaseOptions options)
+        {
+	        var connectionString = $"Password={password};Persist Security Info=True;User ID={username};Initial Catalog=master;Data Source={dataSource}";
+	        return Create(connectionString, options);
+        }
+
+        /// <summary>
         /// Creates a throwaway database using the connection string provided. No need to set the Initial Catalog as it will get replaced by the name of the database that will be created.
         /// </summary>
         public static ThrowawayDatabase Create(string connectionString, ThrowawayDatabaseOptions options)
@@ -205,34 +233,6 @@ namespace ThrowawayDb
 
 	        return database;
         }
-
-        /// <summary>
-        /// Creates a database through SQL server authentication using the given username, password and the datasource/instance.
-        /// </summary>
-        public static ThrowawayDatabase Create(string username, string password, string dataSource, ThrowawayDatabaseOptions options)
-        {
-	        var connectionString = $"Password={password};Persist Security Info=True;User ID={username};Initial Catalog=master;Data Source={dataSource}";
-	        return Create(connectionString, options);
-        }
-
-        /// <summary>
-        /// Creates a database through SQL server authentication using the given username, password and the datasource/instance.
-        /// </summary>
-        public static ThrowawayDatabase Create(string username, string password, string dataSource, string databaseNamePrefix = null) =>
-	        Create(username, password, dataSource, new ThrowawayDatabaseOptions
-	        {
-		        DatabaseNamePrefix = databaseNamePrefix
-            });
-
-
-        /// <summary>
-        /// Creates a throwaway database using the connection string provided. No need to set the Initial Catalog as it will get replaced by the name of the database that will be created.
-        /// </summary>
-        public static ThrowawayDatabase Create(string connectionString, string databaseNamePrefix = null) =>
-	        Create(connectionString, new ThrowawayDatabaseOptions
-	        {
-		        DatabaseNamePrefix = databaseNamePrefix
-	        });
 
         /// <summary>
         /// Creates a new snapshot of the <see cref="ThrowawayDatabase"/> in case there is no snapshot created.<br/>
