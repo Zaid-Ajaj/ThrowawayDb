@@ -26,15 +26,11 @@ public static void Main(string[] args)
         // - Apply database migrations here if necessary
         // - Seed the database with data
         // - Execute your code against this database
-
-        using (var connection = database.OpenConnection())
-        {
-            using (var cmd = new SqlCommand("SELECT 1", connection))
-            {
-                var result = Convert.ToInt32(cmd.ExecuteScalar());
-                Console.WriteLine(result);
-            }
-        }
+        using var connection = new SqlConnection(database.ConnectionString);
+        connection.Open();
+        using var cmd = new SqlCommand("SELECT 1", connection);
+        var result = Convert.ToInt32(cmd.ExecuteScalar());
+        Console.WriteLine(result);
     }
 }
 ```
@@ -89,15 +85,11 @@ static void Main(string[] args)
 {
     using (var database = ThrowawayDatabase.Create(username: "postgres", password: "postgres", host: "localhost"))
     {
-        using (var connection = new NpgsqlConnection(database.ConnectionString))
-        {
-            connection.Open();
-            using (var cmd = new NpgsqlCommand("SELECT 1", connection))
-            {
-                var result = Convert.ToInt32(cmd.ExecuteScalar());
-                Console.WriteLine(result);
-            }
-        }
+        using var connection = new NpgsqlConnection(database.ConnectionString);
+        connection.Open();
+        using var cmd = new NpgsqlCommand("SELECT 1", connection);
+        var result = Convert.ToInt32(cmd.ExecuteScalar());
+        Console.WriteLine(result);
     }
 }
 ```

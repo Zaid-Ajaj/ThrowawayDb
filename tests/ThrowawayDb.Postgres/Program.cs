@@ -12,15 +12,13 @@ namespace tests
             Console.WriteLine($"Arguments [{arguments}]");
 
             using (var database = ThrowawayDatabase.Create("postgres", "postgres", "localhost"))
+            using (var connection = new NpgsqlConnection(database.ConnectionString))
             {
-                using (var connection = new NpgsqlConnection(database.ConnectionString))
+                connection.Open();
+                using (var cmd = new NpgsqlCommand("SELECT 1", connection))
                 {
-                    connection.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT 1", connection))
-                    {
-                        var result = Convert.ToInt32(cmd.ExecuteScalar());
-                        Console.WriteLine(result);
-                    }
+                    var result = Convert.ToInt32(cmd.ExecuteScalar());
+                    Console.WriteLine(result);
                 }
             }
         }

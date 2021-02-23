@@ -8,13 +8,15 @@
     <PackageIconUrl></PackageIconUrl>
     <PackageTags>sql; sql-server; integration tests; tests</PackageTags>
     <Authors>Zaid Ajaj</Authors>
-    <Version>1.4.0</Version>
+    <Version>1.5.0</Version>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageReleaseNotes>Implement more options with database collation</PackageReleaseNotes>
+    <PackageReleaseNotes>
+      Added CreateSnapshotScope() extension function to create an IDisposable Snapshot.
+      Use Microsoft.Data.SqlClient instead of System.Data.SqlClient.
+      More robust handling of connecting to master
+    </PackageReleaseNotes>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="System.Data.SqlClient" Version="4.6.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="2.1.1" />
   </ItemGroup>
-
 </Project>

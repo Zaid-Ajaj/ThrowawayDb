@@ -2,13 +2,9 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp5.0</TargetFramework>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Npgsql" Version="4.0.6" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ThrowawayDb.Postgres\ThrowawayDb.Postgres.csproj" />

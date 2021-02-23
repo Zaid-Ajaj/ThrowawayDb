@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 
@@ -62,7 +62,8 @@ namespace ThrowawayDb
                     return false;
 
                 var databaseName = database.ToString();
-                var connectionStringOfMaster = ConnectionString.Replace(databaseName, "master");
+                builder.InitialCatalog = "master";
+                var connectionStringOfMaster = builder.ToString();
                 using (var connection = new SqlConnection(connectionStringOfMaster))
                 {
                     connection.Open();

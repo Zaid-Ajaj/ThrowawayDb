@@ -1,337 +1,337 @@
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using FluentAssertions;
 using ThrowawayDb;
 using Xunit;
 
 namespace Tests
 {
-	public sealed class Create : TestsBase
-	{
-		private const string UserName = "sa",
-			Password = "password";
+    public sealed class Create : TestsBase
+    {
+        private const string UserName = "sa",
+            Password = "password";
 
-		[Fact(DisplayName = "Create a new database with a username and password")]
-		public void CreateDatabaseWithUserNameAndPassword()
-		{
-			using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName);
+        [Fact(DisplayName = "Create a new database with a username and password")]
+        public void CreateDatabaseWithUserNameAndPassword()
+        {
+            using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName);
 
-			fixture.Name
-				.Should()
-				.StartWith("ThrowawayDb");
+            fixture.Name
+                .Should()
+                .StartWith("ThrowawayDb");
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-		[Fact(DisplayName = "Create a new database with a username, password and prefix")]
-		public void CreateDatabaseWithUserNamePasswordAndPrefix()
-		{
-			const string prefix = nameof(prefix);
+        [Fact(DisplayName = "Create a new database with a username, password and prefix")]
+        public void CreateDatabaseWithUserNamePasswordAndPrefix()
+        {
+            const string prefix = nameof(prefix);
 
-			using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, prefix);
+            using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, prefix);
 
-			fixture.Name
-				.Should()
-				.StartWith(prefix);
+            fixture.Name
+                .Should()
+                .StartWith(prefix);
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-		[Fact(DisplayName = "Create a new database with a username, password and default options")]
-		public void CreateDatabaseWithUserNamePasswordAndOptions()
-		{
-			using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, new ThrowawayDatabaseOptions());
+        [Fact(DisplayName = "Create a new database with a username, password and default options")]
+        public void CreateDatabaseWithUserNamePasswordAndOptions()
+        {
+            using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, new ThrowawayDatabaseOptions());
 
-			fixture.Name
-				.Should()
-				.StartWith("ThrowawayDb");
+            fixture.Name
+                .Should()
+                .StartWith("ThrowawayDb");
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-		[Fact(DisplayName = "Create a new database with a username, password and options (Prefix)")]
-		public void CreateDatabaseWithUserNamePasswordAndPrefixOptions()
-		{
-			const string prefix = nameof(prefix);
+        [Fact(DisplayName = "Create a new database with a username, password and options (Prefix)")]
+        public void CreateDatabaseWithUserNamePasswordAndPrefixOptions()
+        {
+            const string prefix = nameof(prefix);
 
-			using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, new ThrowawayDatabaseOptions
-			{
-				DatabaseNamePrefix = prefix
-			});
+            using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, new ThrowawayDatabaseOptions
+            {
+                DatabaseNamePrefix = prefix
+            });
 
-			fixture.Name
-				.Should()
-				.StartWith(prefix);
+            fixture.Name
+                .Should()
+                .StartWith(prefix);
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-		[Fact(DisplayName = "Create a new database with a username, password and options (Collation)")]
-		public void CreateDatabaseWithUserNamePasswordAndCollationOptions()
-		{
-			const string collation = "Japanese_CI_AS";
+        [Fact(DisplayName = "Create a new database with a username, password and options (Collation)")]
+        public void CreateDatabaseWithUserNamePasswordAndCollationOptions()
+        {
+            const string collation = "Japanese_CI_AS";
 
-			using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, new ThrowawayDatabaseOptions
-			{
-				Collation = collation
-			});
+            using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, new ThrowawayDatabaseOptions
+            {
+                Collation = collation
+            });
 
-			fixture.Name
-				.Should()
-				.StartWith("ThrowawayDb");
+            fixture.Name
+                .Should()
+                .StartWith("ThrowawayDb");
 
-			GetCollation(fixture)
-				.Should()
-				.Be(collation);
+            GetCollation(fixture)
+                .Should()
+                .Be(collation);
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-		[Fact(DisplayName = "Create a new database with a username, password and options (Prefix, Collation)")]
-		public void CreateDatabaseWithUserNamePasswordAndPrefixCollationOptions()
-		{
-			const string prefix = nameof(prefix),
-				collation = "Japanese_CI_AS";
+        [Fact(DisplayName = "Create a new database with a username, password and options (Prefix, Collation)")]
+        public void CreateDatabaseWithUserNamePasswordAndPrefixCollationOptions()
+        {
+            const string prefix = nameof(prefix),
+                collation = "Japanese_CI_AS";
 
-			using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, new ThrowawayDatabaseOptions
-			{
-				DatabaseNamePrefix = prefix,
-				Collation = collation
-			});
+            using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, new ThrowawayDatabaseOptions
+            {
+                DatabaseNamePrefix = prefix,
+                Collation = collation
+            });
 
-			fixture.Name
-				.Should()
-				.StartWith(prefix);
+            fixture.Name
+                .Should()
+                .StartWith(prefix);
 
-			GetCollation(fixture)
-				.Should()
-				.Be(collation);
+            GetCollation(fixture)
+                .Should()
+                .Be(collation);
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-		[Theory(DisplayName = "Create a new database with a user name and password, but without a collation if it is null or a white space")]
-		[InlineData(null)]
-		[InlineData("")]
-		[InlineData(" ")]
-		public void CreateDatabaseWithUserNamePasswordCollationNullOrWhiteSpace(string collation)
-		{
-			const string prefix = nameof(prefix);
+        [Theory(DisplayName = "Create a new database with a user name and password, but without a collation if it is null or a white space")]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public void CreateDatabaseWithUserNamePasswordCollationNullOrWhiteSpace(string collation)
+        {
+            const string prefix = nameof(prefix);
 
-			using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, new ThrowawayDatabaseOptions
-			{
-				DatabaseNamePrefix = prefix,
-				Collation = collation
-			});
+            using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, new ThrowawayDatabaseOptions
+            {
+                DatabaseNamePrefix = prefix,
+                Collation = collation
+            });
 
-			fixture.Name
-				.Should()
-				.StartWith(prefix);
+            fixture.Name
+                .Should()
+                .StartWith(prefix);
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-		[Fact(DisplayName = "Create a new database with a connection string")]
-		public void CreateDatabaseWithConnectionString()
-		{
-			var connectionString = new SqlConnectionStringBuilder
-			{
-				PersistSecurityInfo = true,
-				DataSource = LocalInstanceName,
-				UserID = UserName,
-				Password = Password
-			}.ConnectionString;
+        [Fact(DisplayName = "Create a new database with a connection string")]
+        public void CreateDatabaseWithConnectionString()
+        {
+            var connectionString = new SqlConnectionStringBuilder
+            {
+                PersistSecurityInfo = true,
+                DataSource = LocalInstanceName,
+                UserID = UserName,
+                Password = Password
+            }.ConnectionString;
 
-			using var fixture = ThrowawayDatabase.Create(connectionString);
+            using var fixture = ThrowawayDatabase.Create(connectionString);
 
-			fixture.Name
-				.Should()
-				.StartWith("ThrowawayDb");
+            fixture.Name
+                .Should()
+                .StartWith("ThrowawayDb");
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-		[Fact(DisplayName = "Create a new database with a connection string and prefix")]
-		public void CreateDatabaseWithConnectionStringPrefix()
-		{
-			const string prefix = nameof(prefix);
+        [Fact(DisplayName = "Create a new database with a connection string and prefix")]
+        public void CreateDatabaseWithConnectionStringPrefix()
+        {
+            const string prefix = nameof(prefix);
 
-			var connectionString = new SqlConnectionStringBuilder
-			{
-				PersistSecurityInfo = true,
-				DataSource = LocalInstanceName,
-				UserID = UserName,
-				Password = Password
-			}.ConnectionString;
+            var connectionString = new SqlConnectionStringBuilder
+            {
+                PersistSecurityInfo = true,
+                DataSource = LocalInstanceName,
+                UserID = UserName,
+                Password = Password
+            }.ConnectionString;
 
-			using var fixture = ThrowawayDatabase.Create(connectionString, prefix);
+            using var fixture = ThrowawayDatabase.Create(connectionString, prefix);
 
-			fixture.Name
-				.Should()
-				.StartWith(prefix);
+            fixture.Name
+                .Should()
+                .StartWith(prefix);
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
-		
-		[Fact(DisplayName = "Create a new database with a connection string and default options")]
-		public void CreateDatabaseWithConnectionStringAndOptions()
-		{
-			var connectionString = new SqlConnectionStringBuilder
-			{
-				PersistSecurityInfo = true,
-				DataSource = LocalInstanceName,
-				UserID = UserName,
-				Password = Password
-			}.ConnectionString;
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-			using var fixture = ThrowawayDatabase.Create(connectionString, new ThrowawayDatabaseOptions());
+        [Fact(DisplayName = "Create a new database with a connection string and default options")]
+        public void CreateDatabaseWithConnectionStringAndOptions()
+        {
+            var connectionString = new SqlConnectionStringBuilder
+            {
+                PersistSecurityInfo = true,
+                DataSource = LocalInstanceName,
+                UserID = UserName,
+                Password = Password
+            }.ConnectionString;
 
-			fixture.Name
-				.Should()
-				.StartWith("ThrowawayDb");
+            using var fixture = ThrowawayDatabase.Create(connectionString, new ThrowawayDatabaseOptions());
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
+            fixture.Name
+                .Should()
+                .StartWith("ThrowawayDb");
 
-		[Fact(DisplayName = "Create a new database with a connection string and options (Prefix)")]
-		public void CreateDatabaseWithConnectionStringAndPrefixOptions()
-		{
-			const string prefix = nameof(prefix);
-			
-			var connectionString = new SqlConnectionStringBuilder
-			{
-				PersistSecurityInfo = true,
-				DataSource = LocalInstanceName,
-				UserID = UserName,
-				Password = Password
-			}.ConnectionString;
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-			using var fixture = ThrowawayDatabase.Create(connectionString, new ThrowawayDatabaseOptions
-			{
-				DatabaseNamePrefix = prefix
-			});
+        [Fact(DisplayName = "Create a new database with a connection string and options (Prefix)")]
+        public void CreateDatabaseWithConnectionStringAndPrefixOptions()
+        {
+            const string prefix = nameof(prefix);
 
-			fixture.Name
-				.Should()
-				.StartWith(prefix);
+            var connectionString = new SqlConnectionStringBuilder
+            {
+                PersistSecurityInfo = true,
+                DataSource = LocalInstanceName,
+                UserID = UserName,
+                Password = Password
+            }.ConnectionString;
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
+            using var fixture = ThrowawayDatabase.Create(connectionString, new ThrowawayDatabaseOptions
+            {
+                DatabaseNamePrefix = prefix
+            });
 
-		[Fact(DisplayName = "Create a new database with a connection string and options (Collation)")]
-		public void CreateDatabaseWithConnectionStringAndCollationOptions()
-		{
-			const string collation = "Japanese_CI_AS";
+            fixture.Name
+                .Should()
+                .StartWith(prefix);
 
-			var connectionString = new SqlConnectionStringBuilder
-			{
-				PersistSecurityInfo = true,
-				DataSource = LocalInstanceName,
-				UserID = UserName,
-				Password = Password
-			}.ConnectionString;
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-			using var fixture = ThrowawayDatabase.Create(connectionString, new ThrowawayDatabaseOptions
-			{
-				Collation = collation
-			});
+        [Fact(DisplayName = "Create a new database with a connection string and options (Collation)")]
+        public void CreateDatabaseWithConnectionStringAndCollationOptions()
+        {
+            const string collation = "Japanese_CI_AS";
 
-			fixture.Name
-				.Should()
-				.StartWith("ThrowawayDb");
+            var connectionString = new SqlConnectionStringBuilder
+            {
+                PersistSecurityInfo = true,
+                DataSource = LocalInstanceName,
+                UserID = UserName,
+                Password = Password
+            }.ConnectionString;
 
-			GetCollation(fixture)
-				.Should()
-				.Be(collation);
+            using var fixture = ThrowawayDatabase.Create(connectionString, new ThrowawayDatabaseOptions
+            {
+                Collation = collation
+            });
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
+            fixture.Name
+                .Should()
+                .StartWith("ThrowawayDb");
 
-		[Fact(DisplayName = "Create a new database with a connection string and options (Prefix, Collation)")]
-		public void CreateDatabaseWithConnectionStringAndPrefixCollationOptions()
-		{
-			const string prefix = nameof(prefix),
-				collation = "Japanese_CI_AS";
+            GetCollation(fixture)
+                .Should()
+                .Be(collation);
 
-			var connectionString = new SqlConnectionStringBuilder
-			{
-				PersistSecurityInfo = true,
-				DataSource = LocalInstanceName,
-				UserID = UserName,
-				Password = Password
-			}.ConnectionString;
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-			using var fixture = ThrowawayDatabase.Create(connectionString, new ThrowawayDatabaseOptions
-			{
-				DatabaseNamePrefix = prefix,
-				Collation = collation
-			});
+        [Fact(DisplayName = "Create a new database with a connection string and options (Prefix, Collation)")]
+        public void CreateDatabaseWithConnectionStringAndPrefixCollationOptions()
+        {
+            const string prefix = nameof(prefix),
+                collation = "Japanese_CI_AS";
 
-			fixture.Name
-				.Should()
-				.StartWith(prefix);
+            var connectionString = new SqlConnectionStringBuilder
+            {
+                PersistSecurityInfo = true,
+                DataSource = LocalInstanceName,
+                UserID = UserName,
+                Password = Password
+            }.ConnectionString;
 
-			GetCollation(fixture)
-				.Should()
-				.Be(collation);
+            using var fixture = ThrowawayDatabase.Create(connectionString, new ThrowawayDatabaseOptions
+            {
+                DatabaseNamePrefix = prefix,
+                Collation = collation
+            });
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
+            fixture.Name
+                .Should()
+                .StartWith(prefix);
 
-		[Theory(DisplayName = "Create a new database with a connection string, but without a collation if it is null or a white space")]
-		[InlineData(null)]
-		[InlineData("")]
-		[InlineData(" ")]
-		public void CreateDatabaseWithConnectionStringWithoutCollationIfNullOrWhiteSpace(string collation)
-		{
-			const string prefix = nameof(prefix);
+            GetCollation(fixture)
+                .Should()
+                .Be(collation);
 
-			var connectionString = new SqlConnectionStringBuilder
-			{
-				PersistSecurityInfo = true,
-				DataSource = LocalInstanceName,
-				UserID = UserName,
-				Password = Password
-			}.ConnectionString;
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
 
-			using var fixture = ThrowawayDatabase.Create(connectionString, new ThrowawayDatabaseOptions
-			{
-				DatabaseNamePrefix = prefix,
-				Collation = collation
-			});
+        [Theory(DisplayName = "Create a new database with a connection string, but without a collation if it is null or a white space")]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public void CreateDatabaseWithConnectionStringWithoutCollationIfNullOrWhiteSpace(string collation)
+        {
+            const string prefix = nameof(prefix);
 
-			fixture.Name
-				.Should()
-				.StartWith(prefix);
+            var connectionString = new SqlConnectionStringBuilder
+            {
+                PersistSecurityInfo = true,
+                DataSource = LocalInstanceName,
+                UserID = UserName,
+                Password = Password
+            }.ConnectionString;
 
-			CheckCommandExecution(fixture)
-				.Should()
-				.BeTrue();
-		}
-	}
+            using var fixture = ThrowawayDatabase.Create(connectionString, new ThrowawayDatabaseOptions
+            {
+                DatabaseNamePrefix = prefix,
+                Collation = collation
+            });
+
+            fixture.Name
+                .Should()
+                .StartWith(prefix);
+
+            CheckCommandExecution(fixture)
+                .Should()
+                .BeTrue();
+        }
+    }
 }

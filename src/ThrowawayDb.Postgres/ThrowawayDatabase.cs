@@ -114,7 +114,8 @@ namespace ThrowawayDb.Postgres
                 if (builder.TryGetValue("Database", out var database))
                 {
                     var databaseName = database.ToString();
-                    var connectionStringOfMaster = this.ConnectionString.Replace(databaseName, "postgres");
+                    builder.Database = "postgres";
+                    var connectionStringOfMaster = builder.ToString();
                     using (var otherConnection = new NpgsqlConnection(connectionStringOfMaster))
                     {
                         otherConnection.Open();
