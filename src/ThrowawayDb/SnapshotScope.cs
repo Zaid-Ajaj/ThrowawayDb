@@ -4,18 +4,18 @@ namespace ThrowawayDb
 {
     public class SnapshotScope : IDisposable
     {
-        private ThrowawayDatabase _db;
+        public ThrowawayDatabase Db { get; private set; }
 
         public SnapshotScope(ThrowawayDatabase db)
         {
-            _db = db;
-            _db.CreateSnapshot();
+            Db = db;
+            Db.CreateSnapshot();
         }
 
         public void Dispose()
         {
-            _db?.RestoreSnapshot();
-            _db = null;
+            Db?.RestoreSnapshot();
+            Db = null;
         }
     }
 }
