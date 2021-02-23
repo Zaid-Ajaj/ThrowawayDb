@@ -68,6 +68,15 @@ database.CreateSnapshot();
 // execute some other actions which modify the database
 database.RestoreSnapshot();
 ```
+A snapshot can also be created as a snapshot scope. This way you ensure that the RestoreSnapshot method is always called.
+```cs
+using var database = ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS");
+
+using(var scope = database.CreateSnapshotScope())
+{
+    // execute actions that modifies the database, and that should only last inside this scope.
+}
+```
 
 ## Using PostgreSQL server
 Install `ThrowawayDb.Postgres` from Nuget
