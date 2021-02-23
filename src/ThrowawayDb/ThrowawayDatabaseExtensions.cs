@@ -34,5 +34,15 @@ namespace ThrowawayDb
 
 			return connection;
 		}
+
+		/// <summary>
+		/// Creates a snapshot at the beginning of the scope, and restores the snapshot at the end of the scope.
+		/// </summary>
+		/// <param name="this">An instance of <see cref="ThrowawayDatabase"/></param>
+		/// <returns>The <see cref="SnapshotScope"/></returns>
+		public static SnapshotScope CreateSnapshotScope(this ThrowawayDatabase @this)
+        {
+            return new SnapshotScope(@this);
+        }
 	}
 }
