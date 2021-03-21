@@ -8,18 +8,31 @@ namespace ThrowawayDb.MySql
 	public class ThrowawayDatabase : IDisposable
 	{
 		private const string DefaultDatabaseNamePrefix = "ThrowawayDb";
-		private readonly string _databaseName;
 		private string _snapshotPath = string.Empty;
 
 		private ThrowawayDatabase(string connectionString, string databaseName)
 		{
-			_databaseName = databaseName;
+			Name = databaseName;
 			ConnectionString = connectionString;
 		}
 
-		internal string ConnectionString { get; }
+		public string ConnectionString { get; }
 
-		public static ThrowawayDatabase Create(string server, string userName, string password, ThrowawayDatabaseOptions? options = null)
+		public string Name { get; }
+
+		public static ThrowawayDatabase Create(string userName, string password, string server, string prefix) =>
+			Create(userName, password, server, new ThrowawayDatabaseOptions
+			{
+				DatabaseNamePrefix = prefix
+			});
+
+		public static ThrowawayDatabase Create(string connectionString, string prefix) =>
+			Create(connectionString, new ThrowawayDatabaseOptions
+			{
+				DatabaseNamePrefix = prefix
+			});
+
+		public static ThrowawayDatabase Create(string userName, string password, string server, ThrowawayDatabaseOptions? options = null)
 		{
 			var connectionString = new MySqlConnectionStringBuilder
 			{
@@ -52,7 +65,7 @@ namespace ThrowawayDb.MySql
 			if (IsSnapshotCreated())
 				return;
 
-			var snapshotName = $"{_databaseName}_ss.sql";
+			var snapshotName = $"{Name}_ss.sql";
 			var snapshotPath = CreateSnapshotPath(snapshotName);
 
 			using var connection = this.OpenConnection();
@@ -79,7 +92,7 @@ namespace ThrowawayDb.MySql
 			try
 			{
 				using var connection = this.OpenConnection();
-				connection.ExecuteNonQuery($"DROP DATABASE {_databaseName}");
+				connection.ExecuteNonQuery($"DROP DATABASE {Name}");
 			}
 			catch (Exception ex)
 			{
@@ -145,10 +158,8 @@ namespace ThrowawayDb.MySql
 
 				var cmdTextBuilder = new StringBuilder()
 					.AppendFormat("CREATE DATABASE {0}", databaseName);
-					
-				if (!string.IsNullOrEmpty(options.CharacterSet))
-					cmdTextBuilder.AppendFormat(" CHARACTER SET {0}", options.CharacterSet);
-				if (!string.IsNullOrEmpty(options.Collation))
+
+				if (!string.IsNullOrWhiteSpace(options.Collation))
 					cmdTextBuilder.AppendFormat(" COLLATE {0}", options.Collation);
 
 				connection.ExecuteNonQuery(cmdTextBuilder.Append(';').ToString());
