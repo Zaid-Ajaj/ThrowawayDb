@@ -74,22 +74,5 @@ namespace ThrowawayDb.MySql.Tests
 			using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName);
 			fixture.RestoreSnapshot();
 		}
-
-		[Fact(DisplayName = "Create a snapshot with a custom collation")]
-		public void CreateDatabaseWithCollation()
-		{
-			const string collation = "Japanese_CI_AS";
-
-			using var fixture = ThrowawayDatabase.Create(UserName, Password, LocalInstanceName, new ThrowawayDatabaseOptions
-			{
-				Collation = collation
-			});
-
-			fixture.CreateSnapshot();
-
-			GetCollation(fixture, $"{fixture.Name}_ss")
-				.Should()
-				.Be(collation);
-		}
 	}
 }
