@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using MySql.Data.MySqlClient;
 
 namespace ThrowawayDb.MySql
@@ -18,7 +19,7 @@ namespace ThrowawayDb.MySql
 
 		internal string ConnectionString { get; }
 
-		public static ThrowawayDatabase Create(string server, string userName, string password)
+		public static ThrowawayDatabase Create(string server, string userName, string password, ThrowawayDatabaseOptions? options = null)
 		{
 			var connectionString = new MySqlConnectionStringBuilder
 			{
@@ -27,15 +28,16 @@ namespace ThrowawayDb.MySql
 				Password = password
 			}.ConnectionString;
 
-			return Create(connectionString);
+			return Create(connectionString, options);
 		}
 
-		public static ThrowawayDatabase Create(string connectionString)
+		public static ThrowawayDatabase Create(string connectionString, ThrowawayDatabaseOptions? options = null)
 		{
 			if (!TryPingDatabase(connectionString))
 				throw new Exception("Could not connect to the database");
 
-			if (!TryCreateDatabase(connectionString, out connectionString, out var databaseName))
+			options ??= new ThrowawayDatabaseOptions();
+			if (!TryCreateDatabase(connectionString, options, out connectionString, out var databaseName))
 				throw new Exception("Could not create the throwaway database");
 
 			return new ThrowawayDatabase(connectionString, databaseName);
@@ -116,9 +118,11 @@ namespace ThrowawayDb.MySql
 			}
 		}
 
-		private static bool TryCreateDatabase(string connectionString, out string databaseConnectionString, out string databaseName)
+		private static bool TryCreateDatabase(string connectionString, ThrowawayDatabaseOptions options, out string databaseConnectionString, out string databaseName)
 		{
-			databaseName = $"{DefaultDatabaseNamePrefix}{Guid.NewGuid().ToString("n").Substring(0, 10)}";
+			var prefix = string.IsNullOrEmpty(options.DatabaseNamePrefix) ? DefaultDatabaseNamePrefix : options.DatabaseNamePrefix;
+			databaseName = $"{prefix}{Guid.NewGuid().ToString("n").Substring(0, 10)}";
+
 			var builder = new MySqlConnectionStringBuilder(connectionString)
 			{
 				Database = databaseName
@@ -139,7 +143,15 @@ namespace ThrowawayDb.MySql
 							return true;
 				}
 
-				connection.ExecuteNonQuery($"CREATE DATABASE {databaseName};");
+				var cmdTextBuilder = new StringBuilder()
+					.AppendFormat("CREATE DATABASE {0}", databaseName);
+					
+				if (!string.IsNullOrEmpty(options.CharacterSet))
+					cmdTextBuilder.AppendFormat(" CHARACTER SET {0}", options.CharacterSet);
+				if (!string.IsNullOrEmpty(options.Collation))
+					cmdTextBuilder.AppendFormat(" COLLATE {0}", options.Collation);
+
+				connection.ExecuteNonQuery(cmdTextBuilder.Append(';').ToString());
 				Console.WriteLine("Database created successfully");
 				return true;
 			}
