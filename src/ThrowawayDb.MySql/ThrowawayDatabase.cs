@@ -65,13 +65,12 @@ namespace ThrowawayDb.MySql
 			if (IsSnapshotCreated())
 				return;
 
-			var snapshotName = $"{Name}_ss.sql";
-			var snapshotPath = CreateSnapshotPath(snapshotName);
+			var snapshotPath = CreateSnapshotPath($"{Name}_ss.sql");
 
 			using var connection = this.OpenConnection();
 			connection.CreateBackup(snapshotPath);
 
-			_snapshotPath = snapshotName;
+			_snapshotPath = snapshotPath;
 		}
 
 		/// <summary>
@@ -108,8 +107,14 @@ namespace ThrowawayDb.MySql
 		private bool IsSnapshotCreated() =>
 			!string.IsNullOrEmpty(_snapshotPath);
 
-		private static string CreateSnapshotPath(string snapshotName) =>
-			Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Snapshot", $"{snapshotName}.sql");
+		private static string CreateSnapshotPath(string snapshotName)
+		{
+			var path = Path.GetDirectoryName(typeof(ThrowawayDatabase).Assembly.Location) ?? string.Empty;
+			path = Path.Combine(path, "Snapshot");
+			Directory.CreateDirectory(path);
+			
+			return Path.Combine(path, $"{snapshotName}.sql");
+		}
 
 		private static bool TryPingDatabase(string connectionString)
 		{
