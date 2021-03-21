@@ -5,7 +5,7 @@ namespace ThrowawayDb.MySql.Tests
 {
 	public abstract class ThrowawayDatabaseTestsBase
 	{
-		protected const string LocalInstanceName = "localhost", UserName = "root", Password = "root";
+		protected const string LocalInstanceName = "localhost", UserName = "Zaid", Password = "strongPassword";
 
 		protected static bool CheckCommandExecution(ThrowawayDatabase fixture)
 		{
