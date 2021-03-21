@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using MySql.Data.MySqlClient;
 
 namespace ThrowawayDb.MySql
@@ -6,14 +7,16 @@ namespace ThrowawayDb.MySql
 	public class ThrowawayDatabase : IDisposable
 	{
 		private const string DefaultDatabaseNamePrefix = "ThrowawayDb";
-		private readonly string _connectionString;
 		private readonly string _databaseName;
+		private string _snapshotPath = string.Empty;
 
 		private ThrowawayDatabase(string connectionString, string databaseName)
 		{
-			_connectionString = connectionString;
 			_databaseName = databaseName;
+			ConnectionString = connectionString;
 		}
+
+		internal string ConnectionString { get; }
 
 		public static ThrowawayDatabase Create(string server, string userName, string password)
 		{
@@ -38,11 +41,60 @@ namespace ThrowawayDb.MySql
 			return new ThrowawayDatabase(connectionString, databaseName);
 		}
 
+		/// <summary>
+		/// Creates a new snapshot of the <see cref="ThrowawayDatabase"/> in case there is no snapshot created.<br/>
+		/// Does nothing if a snapshot has already been created.
+		/// </summary>
+		public void CreateSnapshot()
+		{
+			if (IsSnapshotCreated())
+				return;
+
+			var snapshotName = $"{_databaseName}_ss.sql";
+			var snapshotPath = CreateSnapshotPath(snapshotName);
+
+			using var connection = this.OpenConnection();
+			connection.CreateBackup(snapshotPath);
+
+			_snapshotPath = snapshotName;
+		}
+
+		/// <summary>
+		/// Restores a snapshot of the <see cref="ThrowawayDatabase"/> in case the snapshot has been previously created.<br/>
+		/// Does nothing if a snapshot has not been created.
+		/// </summary>
+		public void RestoreSnapshot()
+		{
+			if (!IsSnapshotCreated())
+				return;
+
+			using var connection = this.OpenConnection();
+			connection.RestoreBackup(_snapshotPath);
+		}
+
 		public void Dispose()
 		{
-			using var connection = new MySqlConnection(_connectionString);
-			connection.ExecuteNonQuery($"DROP DATABASE {_databaseName}");
+			try
+			{
+				using var connection = this.OpenConnection();
+				connection.ExecuteNonQuery($"DROP DATABASE {_databaseName}");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Cannot drop the database: {ex}");
+			}
+
+			if (IsSnapshotCreated())
+				File.Delete(_snapshotPath);
+
+			_snapshotPath = string.Empty;
 		}
+
+		private bool IsSnapshotCreated() =>
+			!string.IsNullOrEmpty(_snapshotPath);
+
+		private static string CreateSnapshotPath(string snapshotName) =>
+			Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Snapshot", $"{snapshotName}.sql");
 
 		private static bool TryPingDatabase(string connectionString)
 		{
