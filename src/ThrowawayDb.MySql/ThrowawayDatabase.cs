@@ -65,7 +65,7 @@ namespace ThrowawayDb.MySql
 			if (IsSnapshotCreated())
 				return;
 
-			var snapshotPath = CreateSnapshotPath($"{Name}_ss.sql");
+			var snapshotPath = CreateSnapshotPath($"{Name}_ss");
 
 			using var connection = this.OpenConnection();
 			connection.CreateBackup(snapshotPath);
