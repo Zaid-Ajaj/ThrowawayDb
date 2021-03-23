@@ -15,7 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThrowawayDb.SqlServer.Tests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThrowawayDb.MySql.Tests", "tests\ThrowawayDb.MySql\ThrowawayDb.MySql.Tests.csproj", "{1C43367C-D53E-4360-A9B5-0A77A92E9858}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThrowawayDb.Postgres.Tests", "tests\ThrowawayDb.Postgres\ThrowawayDb.Postgres.Tests.csproj", "{CF7AFBD5-D0E6-43E1-97FA-DCAB6B8199B0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThrowawayDb.Postgres.Tests", "tests\ThrowawayDb.Postgres\ThrowawayDb.Postgres.Tests.csproj", "{CF7AFBD5-D0E6-43E1-97FA-DCAB6B8199B0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "build", "build\build.csproj", "{85A9793E-F034-4C53-97B5-55EFE23CFCDA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +49,10 @@ Global
 		{CF7AFBD5-D0E6-43E1-97FA-DCAB6B8199B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF7AFBD5-D0E6-43E1-97FA-DCAB6B8199B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF7AFBD5-D0E6-43E1-97FA-DCAB6B8199B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{85A9793E-F034-4C53-97B5-55EFE23CFCDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85A9793E-F034-4C53-97B5-55EFE23CFCDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85A9793E-F034-4C53-97B5-55EFE23CFCDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85A9793E-F034-4C53-97B5-55EFE23CFCDA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
