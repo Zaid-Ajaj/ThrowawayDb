@@ -8,6 +8,7 @@ Easily create a disposable database that integration tests dead simple for Sql s
 | -------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | ThrowawayDb          | SQL Server | [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb)                   |
 | ThrowawayDb.Postgres | Postgres   | [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.Postgres.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb.Postgres) |
+| ThrowawayDb.MySQL    | MySQL      | [![Nuget](https://img.shields.io/nuget/v/ThrowawayDb.MySql.svg?colorB=green)](https://www.nuget.org/packages/ThrowawayDb.MySql)       |
 
 ## Using SQL Server
 
@@ -39,21 +40,22 @@ In the snippet above, a dummy database with a random name is created using the c
 You can create the throwaway database in multiple ways:
 ```cs
 // from Sql Express server locally with Integrated security
-ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS")
+ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS");
 
 // Uses the default instance locally where Data Source = .
-ThrowawayDatabase.FromDefaultLocalInstance()
+ThrowawayDatabase.FromDefaultLocalInstance();
 
 // Using SQL Authentication with user credentials and an arbibrary host
-ThrowawayDatabase.Create(username: "Zaid", password: "strongPassword", host: "192.168.1.100")
+ThrowawayDatabase.Create(username: "Zaid", password: "strongPassword", host: "192.168.1.100");
 
 // Using a connection string where Initial Catalog is master
-ThrowawayDatabase.Create(connectionString: "Data Source=localhost\\SQLEXPRESS;Initial Catalog=master;Integrated Security=True;")
+ThrowawayDatabase.Create(connectionString: "Data Source=localhost\\SQLEXPRESS;Initial Catalog=master;Integrated Security=True;");
 
 // Specify a custom database prefix, otherwise it just uses ThrowawayDb
-ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS", "dbprefix_")
+ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS", "dbprefix_");
 ```
 
+#### SQL server snapshot
 You can create a snapshot of the database and restore it at a later point:
 ```cs
 using var database = ThrowawayDatabase.FromLocalInstance("localhost\\SQLEXPRESS");
@@ -93,6 +95,38 @@ static void Main(string[] args)
     }
 }
 ```
+
+## Using MySQL server
+You can create the throwaway database in multiple ways:
+```cs
+// Using SQL Authentication with user credentials and an arbibrary host
+ThrowawayDatabase.Create(userName: "Zaid", password: "strongPassword", server: "localhost");
+
+// Using a connection string where Initial Catalog is master
+ThrowawayDatabase.Create(connectionString: "server=localhost;user id=Zaid;password=strongPassword;");
+
+// Specify a custom database prefix, otherwise it just uses ThrowawayDb
+ThrowawayDatabase.Create(userName: "Zaid", password: "strongPassword", server: "localhost", "dbprefix_");
+
+// Specify all options
+ThrowawayDatabase.Create("server=localhost;user id=Zaid;password=strongPassword;", new ThrowawayDatabaseOptions
+{
+    DatabaseNamePrefix = "dbprefix_",
+    Collation = "ujis_japanese_ci"
+});
+```
+#### MySQL snapshot
+You can create a snapshot of the database and restore it at a later point:
+```cs
+using var database = ThrowawayDatabase.Create("Zaid", "strongPassword", "localhost");
+
+// execute necessary actions before initialising a snapshot
+database.CreateSnapshot();
+
+// execute some other actions which modify the database
+database.RestoreSnapshot();
+```
+
 ### Running build targets for development
 ```
 ./build.sh --target {TargetName}
