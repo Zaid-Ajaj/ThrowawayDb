@@ -11,13 +11,14 @@ namespace ThrowawayDb.Postgres
         /// <summary>Returns the name of the database that was created</summary>
         public string Name { get; internal set; }
         private bool databaseCreated;
-        private string originalConnectionString;
-        private string defaultDatabaseNamePrefix = "throwawaydb";
+        private readonly string originalConnectionString;
+        private readonly string defaultDatabaseNamePrefix = "throwawaydb";
 
-        private ThrowawayDatabase(string originalConnectionString, string databaseNamePrefix)
+        private ThrowawayDatabase(string originalConnectionString, string? databaseNamePrefix)
         {
             // Default constructor is private
             this.originalConnectionString = originalConnectionString;
+            
             var (derivedConnectionString, databaseName) = DeriveThrowawayConnectionString(originalConnectionString, databaseNamePrefix);
             ConnectionString = derivedConnectionString;
             Name = databaseName;
@@ -31,57 +32,52 @@ namespace ThrowawayDb.Postgres
                 using (var connection = new NpgsqlConnection(this.originalConnectionString))
                 {
                     connection.Open();
-
-                }
-
-                using (var connection = new NpgsqlConnection(this.originalConnectionString))
-                {
-                    connection.Open();
-
-                    using (var cmd = new NpgsqlCommand($"REVOKE CONNECT ON DATABASE {Name} FROM public", connection))
+                    using (var commands = new NpgsqlBatch
                     {
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    using (var cmd = new NpgsqlCommand($"select pg_terminate_backend(pid) from pg_stat_activity where datname='{Name}'", connection))
+                        BatchCommands =
+                        {
+                            new NpgsqlBatchCommand($"REVOKE CONNECT ON DATABASE {Name} FROM public"),
+                            new NpgsqlBatchCommand($"select pg_terminate_backend(pid) from pg_stat_activity where datname='{Name}'"),
+                            new NpgsqlBatchCommand($"DROP DATABASE {Name}")
+                        }
+                    })
                     {
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    using (var cmd = new NpgsqlCommand($"DROP DATABASE {Name}", connection))
-                    {
-                        var result = cmd.ExecuteNonQuery();
+                        var result = commands.ExecuteNonQuery();
                     }
                 }
             }
         }
 
-        private (string connectionString, string databaseName) DeriveThrowawayConnectionString(string originalConnectionString, string databaseNamePrefix)
+        private (string connectionString, string databaseName) DeriveThrowawayConnectionString(string originalConnectionString, string? databaseNamePrefix)
         {
             var builder = new NpgsqlConnectionStringBuilder(originalConnectionString);
             var databasePrefix = string.IsNullOrWhiteSpace(databaseNamePrefix) ? defaultDatabaseNamePrefix : databaseNamePrefix;
 
             var databaseName = $"{databasePrefix}{Guid.NewGuid().ToString("n").Substring(0, 10).ToLowerInvariant()}";
 
-            if (builder.TryGetValue("Database", out var initialDb))
-            {
-                builder.Remove("Database");
-            }
-
+            builder.Remove("Database");
             builder.Database = databaseName;
+
             return (builder.ConnectionString, databaseName);
         }
 
-        public static ThrowawayDatabase Create(string username, string password, string host, string databaseNamePrefix = null)
+        public static ThrowawayDatabase Create(string username, string password, string host, string? databaseNamePrefix = null)
         {
-            var connectionString = $"Host={host}; Username={username}; Password={password}; Port=5432; Database=postgres";
+            var connectionStringBuilder = new NpgsqlConnectionStringBuilder
+            {
+                Username = username,
+                Password = password,
+                Host = host,
+                Database = "postgres" // we need an existing db to test the connection
+            };
+
+            var connectionString = connectionStringBuilder.ConnectionString; // $"Host={host}; Username={username}; Password={password}; Port=5432; Database=postgres";
             if (!TryPingDatabase(connectionString))
             {
                 throw new Exception("Could not connect to the database");
             }
 
             var database = new ThrowawayDatabase(connectionString, databaseNamePrefix);
-
             if (!database.CreateDatabaseIfDoesNotExist())
             {
                 throw new Exception("Could not create the throwaway database");
@@ -90,7 +86,7 @@ namespace ThrowawayDb.Postgres
             return database;
         }
 
-        public static ThrowawayDatabase Create(string connectionString, string databaseNamePrefix = null)
+        public static ThrowawayDatabase Create(string connectionString, string? databaseNamePrefix = null)
         {
             if (!TryPingDatabase(connectionString))
             {
@@ -98,7 +94,6 @@ namespace ThrowawayDb.Postgres
             }
 
             var database = new ThrowawayDatabase(connectionString, databaseNamePrefix);
-
             if (!database.CreateDatabaseIfDoesNotExist())
             {
                 throw new Exception("Could not create the throwaway database");
@@ -149,7 +144,7 @@ namespace ThrowawayDb.Postgres
                     connection.Open();
                     using (var cmd = new NpgsqlCommand("select now()", connection))
                     {
-                        var result = cmd.ExecuteScalar();
+                        cmd.ExecuteScalar();
                         return true;
                     }
                 }
