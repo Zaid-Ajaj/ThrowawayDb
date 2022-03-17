@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Description>Dead simple integration tests with Postgres SQL server throwaway databases.</Description>
@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="5.0.3" />
+    <PackageReference Include="Npgsql" Version="6.0.3" />
   </ItemGroup>
 
 </Project>
