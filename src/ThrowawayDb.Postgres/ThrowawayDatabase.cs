@@ -18,8 +18,8 @@ namespace ThrowawayDb.Postgres
         {
             // Default constructor is private
             this.originalConnectionString = originalConnectionString;
-            
             var (derivedConnectionString, databaseName) = DeriveThrowawayConnectionString(originalConnectionString, databaseNamePrefix);
+            
             ConnectionString = derivedConnectionString;
             Name = databaseName;
         }
@@ -32,7 +32,7 @@ namespace ThrowawayDb.Postgres
                 using (var connection = new NpgsqlConnection(this.originalConnectionString))
                 {
                     connection.Open();
-                    using (var commands = new NpgsqlBatch
+                    using (var commands = new NpgsqlBatch(connection)
                     {
                         BatchCommands =
                         {
@@ -101,6 +101,7 @@ namespace ThrowawayDb.Postgres
 
             return database;
         }
+
         private bool CreateDatabaseIfDoesNotExist()
         {
             try
