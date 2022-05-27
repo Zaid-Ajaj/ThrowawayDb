@@ -36,14 +36,9 @@ namespace ThrowawayDb.Postgres
             using var connection = new NpgsqlConnection(originalConnectionString);
             connection.Open();
 
-            using var commands = new NpgsqlBatch(connection)
-            {
-                BatchCommands =
-                {
-                    new NpgsqlBatchCommand($"REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {Name} FROM PUBLIC;"),
-                    new NpgsqlBatchCommand($"DROP SCHEMA {Name} CASCADE;")
-                }
-            };
+            using var commands = new NpgsqlCommand($@"
+                REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA {Name} FROM PUBLIC;
+                DROP SCHEMA {Name} CASCADE;", connection);
 
             commands.ExecuteNonQuery();
         }

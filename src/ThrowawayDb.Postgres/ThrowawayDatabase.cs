@@ -32,17 +32,12 @@ namespace ThrowawayDb.Postgres
                 using (var connection = new NpgsqlConnection(this.originalConnectionString))
                 {
                     connection.Open();
-                    using (var commands = new NpgsqlBatch(connection)
+                    using (var command = new NpgsqlCommand($@"
+                        REVOKE CONNECT ON DATABASE { Name } FROM public;
+                        select pg_terminate_backend(pid) from pg_stat_activity where datname='{Name}';
+                        DROP DATABASE {Name};", connection))
                     {
-                        BatchCommands =
-                        {
-                            new NpgsqlBatchCommand($"REVOKE CONNECT ON DATABASE {Name} FROM public"),
-                            new NpgsqlBatchCommand($"select pg_terminate_backend(pid) from pg_stat_activity where datname='{Name}'"),
-                            new NpgsqlBatchCommand($"DROP DATABASE {Name}")
-                        }
-                    })
-                    {
-                        var result = commands.ExecuteNonQuery();
+                        var result = command.ExecuteNonQuery();
                     }
                 }
             }
@@ -53,7 +48,7 @@ namespace ThrowawayDb.Postgres
             var builder = new NpgsqlConnectionStringBuilder(originalConnectionString);
             var databasePrefix = string.IsNullOrWhiteSpace(databaseNamePrefix) ? defaultDatabaseNamePrefix : databaseNamePrefix;
 
-            var databaseName = $"{databasePrefix}{Guid.NewGuid().ToString("n").Substring(0, 10).ToLowerInvariant()}";
+            var databaseName = databasePrefix + Guid.NewGuid().ToString("n")[..10].ToLowerInvariant();
 
             builder.Remove("Database");
             builder.Database = databaseName;
@@ -61,7 +56,24 @@ namespace ThrowawayDb.Postgres
             return (builder.ConnectionString, databaseName);
         }
 
-        public static ThrowawayDatabase Create(string username, string password, string host, string? databaseNamePrefix = null)
+        /// <summary>
+        /// Creates a new disposable database, using the <paramref name="template"/> database as a template.
+        /// </summary>
+        /// <param name="template">the <see cref="ThrowawayDatabase"/> to use as a template</param>
+        /// <param name="databaseNamePrefix">a string to prepend to the new database's name</param>
+        /// <returns></returns>
+        public static ThrowawayDatabase FromTemplate(ThrowawayDatabase template, string? databaseNamePrefix = null)
+        {
+            var connectionBuilder = new NpgsqlConnectionStringBuilder(template.ConnectionString);
+            var (username, password, host) = (connectionBuilder.Username, connectionBuilder.Password, connectionBuilder.Host);
+
+            if (username is null || password is null || host is null)
+                throw new ArgumentNullException("One ore more connection string parameters are null");
+
+            return Create(username, password, host, databaseNamePrefix, template);
+        }
+
+        public static ThrowawayDatabase Create(string username, string password, string host, string? databaseNamePrefix = null, ThrowawayDatabase? template = null)
         {
             var connectionStringBuilder = new NpgsqlConnectionStringBuilder
             {
@@ -78,7 +90,7 @@ namespace ThrowawayDb.Postgres
             }
 
             var database = new ThrowawayDatabase(connectionString, databaseNamePrefix);
-            if (!database.CreateDatabaseIfDoesNotExist())
+            if (!database.CreateDatabaseIfDoesNotExist(template))
             {
                 throw new Exception("Could not create the throwaway database");
             }
@@ -102,7 +114,7 @@ namespace ThrowawayDb.Postgres
             return database;
         }
 
-        private bool CreateDatabaseIfDoesNotExist()
+        private bool CreateDatabaseIfDoesNotExist(ThrowawayDatabase? template = null)
         {
             try
             {
@@ -117,6 +129,9 @@ namespace ThrowawayDb.Postgres
                         otherConnection.Open();
                         using (var createCmd = new NpgsqlCommand($"CREATE DATABASE {databaseName}", otherConnection))
                         {
+                            if (template is { Name: var templateName })
+                                createCmd.CommandText += $" TEMPLATE {templateName}";
+
                             var result = createCmd.ExecuteNonQuery();
                             Debug.Print($"Successfully created database {databaseName}");
                             this.databaseCreated = true;
@@ -130,8 +145,9 @@ namespace ThrowawayDb.Postgres
                     return false;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.Print(ex.ToString());
                 return false;
             }
         }
