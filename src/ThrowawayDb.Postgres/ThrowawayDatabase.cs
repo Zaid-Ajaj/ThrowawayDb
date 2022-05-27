@@ -130,7 +130,15 @@ namespace ThrowawayDb.Postgres
                         using (var createCmd = new NpgsqlCommand($"CREATE DATABASE {databaseName}", otherConnection))
                         {
                             if (template is { Name: var templateName })
+                            {
+                                using var dropConnections = new NpgsqlCommand(
+                                    $"select pg_terminate_backend(pid) from pg_stat_activity where datname='{template.Name}';", 
+                                    otherConnection
+                                    );
+
+                                dropConnections.ExecuteNonQuery();
                                 createCmd.CommandText += $" TEMPLATE {templateName}";
+                            }
 
                             var result = createCmd.ExecuteNonQuery();
                             Debug.Print($"Successfully created database {databaseName}");
